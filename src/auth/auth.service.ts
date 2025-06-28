@@ -1,26 +1,48 @@
-import { Injectable } from '@nestjs/common'
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { ConflictException, Injectable } from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
 import { CreateAuthDto } from './dto/create-auth.dto'
-import { UpdateAuthDto } from './dto/update-auth.dto'
+import { InjectRepository } from '@nestjs/typeorm'
+import { User } from 'src/user/entities/user.entity'
+import { Repository } from 'typeorm'
+import { ApiResponse, formatResponse } from 'src/types/types'
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth'
+  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
+  private checkEmailExits = async (email: string): Promise<User | null> => {
+    return await this.userRepository.findOne({ where: { email: email } })
   }
 
-  findAll() {
-    return `This action returns all auth`
+  private hashData = async (data: string): Promise<string> => {
+    const saltRounds = 10
+    const hash: string = await bcrypt.hash(data, saltRounds)
+    return hash
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`
+  private verifyData = async (unhashed: string, hashed: string): Promise<boolean> => {
+    const isMatch: boolean = await bcrypt.compare(unhashed, hashed)
+    return isMatch
   }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`
+  async register(createAuthDto: CreateAuthDto): Promise<ApiResponse<null>> {
+    console.log(createAuthDto)
+    if (await this.checkEmailExits(createAuthDto.email)) {
+      throw new ConflictException(`Email: ${createAuthDto.email} already exits `)
+    }
+    const hashedPassword = await this.hashData(createAuthDto.password)
+    const user = this.userRepository.create({
+      username: createAuthDto.username,
+      email: createAuthDto.email,
+      password_hash: hashedPassword,
+      phone: createAuthDto.phone,
+    })
+    await this.userRepository.save(user)
+
+    return formatResponse('success', 'User created success', null)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`
-  }
+  async Login() {}
 }
