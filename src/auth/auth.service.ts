@@ -142,6 +142,7 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token is invalid')
     }
     const { accessToken } = await this.getTokens(payload.sub, payload.email, payload.role)
+    console.log('new access token')
     return formatResponse<string>('success', 'New access token issued', accessToken)
   }
 }

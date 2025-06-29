@@ -13,9 +13,9 @@ export class UserController {
     return this.userService.create(createUserDto)
   }
 
-  // @Public()
   @Get()
   findAll() {
+    console.log('here')
     return this.userService.findAll()
   }
 
