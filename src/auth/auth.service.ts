@@ -10,7 +10,7 @@ import { CreateAuthDto } from './dto/create-auth.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User, UserRole } from 'src/user/entities/user.entity'
 import { Repository } from 'typeorm'
-import { ApiResponse, formatResponse, LoginDataT } from 'src/types/types'
+import { ApiResponse, formatResponse, LoginDataT, payload } from 'src/types/types'
 import { UpdateAuthDto } from './dto/update-auth.dto'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
@@ -125,5 +125,23 @@ export class AuthService {
     } else {
       throw new BadRequestException('Email is required')
     }
+  }
+
+  async refreshToken(id: string, token: string, payload: payload) {
+    if (id !== payload?.sub) {
+      throw new UnauthorizedException('Mismatched token subject and user ID')
+    }
+
+    // fetch user
+    const userSession = await this.sessionRepository.findOne({ where: { userId: id } })
+    if (!userSession || !userSession?.refresh_token) {
+      throw new UnauthorizedException('User not found or no session')
+    }
+    const tokenMatch = await this.verifyData(token, userSession.refresh_token)
+    if (!tokenMatch) {
+      throw new UnauthorizedException('Refresh token is invalid')
+    }
+    const { accessToken } = await this.getTokens(payload.sub, payload.email, payload.role)
+    return formatResponse<string>('success', 'New access token issued', accessToken)
   }
 }

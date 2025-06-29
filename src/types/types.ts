@@ -31,3 +31,9 @@ export function formatResponse<T>(
     data,
   }
 }
+
+export interface payload {
+  sub: string
+  email: string
+  role: UserRole
+}
