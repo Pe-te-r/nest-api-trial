@@ -118,6 +118,7 @@ export class AuthService {
         user: {
           id: foundUser.id,
           email: foundUser.email,
+          role: foundUser.role,
         },
       }
       return formatResponse<LoginDataT>('success', 'Login was success', loginData)

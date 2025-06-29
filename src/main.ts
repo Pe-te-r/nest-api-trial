@@ -5,11 +5,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   app.useGlobalFilters(new GlobalExceptionFilter())
-  // app.use((req, res, next) => {
-  //   console.log(`[HTTP] ${req.method} ${req.url}`);
-  //   next()
-  // })
-
+  app.enableCors()
   await app.listen(process.env.PORT ?? 3001)
 }
 bootstrap()

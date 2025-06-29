@@ -1,3 +1,5 @@
+import { UserRole } from 'src/user/entities/user.entity'
+
 type ResponseStatus = 'success' | 'error'
 
 export interface ApiResponse<T = any> {
@@ -14,6 +16,7 @@ export interface LoginDataT {
   user: {
     email: string
     id: string
+    role: UserRole
   }
 }
 
