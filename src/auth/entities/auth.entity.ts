@@ -1,33 +1,33 @@
 import { User } from 'src/user/entities/user.entity'
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  PrimaryColumn,
 } from 'typeorm'
 
 @Entity('auth_sessions')
 export class AuthSession {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+  @PrimaryColumn('uuid')
+  userId: string
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: false })
   refresh_token: string
-
-  @Column({ type: 'varchar', nullable: true })
-  device_info: string
 
   @Column({ type: 'varchar', nullable: true })
   ip_address: string
 
-  @Column({ type: 'boolean', default: true })
-  is_active: boolean
+  @Column({ type: 'varchar', nullable: false })
+  random_code: string
 
-  @Column({ type: 'timestamp', nullable: true })
-  expires_at: Date
+  @Column({ type: 'varchar', nullable: true })
+  otp_code: string
+
+  @Column({ type: 'boolean', default: false })
+  otp_enabled: boolean
 
   @CreateDateColumn({
     type: 'timestamp',
@@ -43,6 +43,6 @@ export class AuthSession {
   updated_at: Date
 
   @OneToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @JoinColumn({ name: 'userId' })
   user: User
 }

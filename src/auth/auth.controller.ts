@@ -6,7 +6,11 @@ import { CreateAuthDto } from './dto/create-auth.dto'
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   @Post('register')
-  async create(@Body() createAuthDto: CreateAuthDto) {
+  async register(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.register(createAuthDto)
+  }
+  @Post('login')
+  async login(@Body() createAuthDto: CreateAuthDto) {
+    return this.authService.Login(createAuthDto)
   }
 }

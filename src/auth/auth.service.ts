@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
@@ -14,14 +12,15 @@ import { User, UserRole } from 'src/user/entities/user.entity'
 import { Repository } from 'typeorm'
 import { ApiResponse, formatResponse, LoginDataT } from 'src/types/types'
 import { UpdateAuthDto } from './dto/update-auth.dto'
-import { NotFoundError } from 'rxjs'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
+import { AuthSession } from './entities/auth.entity'
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(AuthSession) private sessionRepository: Repository<AuthSession>,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
@@ -59,7 +58,23 @@ export class AuthService {
       refreshToken: rt,
     }
   }
+  private generateSixDigitCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString()
+  }
 
+  // save session method
+  private async saveSession(userId: string, token: string) {
+    const hashed_token = await this.hashData(token)
+    const session = this.sessionRepository.create({
+      refresh_token: hashed_token,
+      user: { id: userId },
+      ip_address: 'Unknown',
+      random_code: this.generateSixDigitCode(),
+    })
+    await this.sessionRepository.save(session)
+  }
+
+  // register method
   async register(createAuthDto: CreateAuthDto): Promise<ApiResponse<null>> {
     if (await this.checkEmailExits(createAuthDto.email)) {
       throw new ConflictException(`Email: ${createAuthDto.email} already exits `)
@@ -76,12 +91,13 @@ export class AuthService {
     return formatResponse('success', 'User created success', null)
   }
 
+  // login method
   async Login(updateAuthDto: UpdateAuthDto): Promise<ApiResponse<LoginDataT>> {
     if (updateAuthDto.email && updateAuthDto.password) {
       // check if user exits
       const foundUser = await this.checkEmailExits(updateAuthDto?.email)
       if (!foundUser) {
-        throw new NotFoundError(`Email: ${updateAuthDto.email} does not exits `)
+        throw new NotFoundException(`Email: ${updateAuthDto.email} does not exits `)
       }
       // password valid check
       if (!(await this.verifyData(updateAuthDto?.password, foundUser.password_hash))) {
@@ -93,6 +109,7 @@ export class AuthService {
         foundUser.email,
         foundUser.role,
       )
+      await this.saveSession(foundUser.id, refreshToken)
       const loginData: LoginDataT = {
         tokens: {
           accessToken,
