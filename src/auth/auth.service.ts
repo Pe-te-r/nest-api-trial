@@ -1,17 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { ConflictException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { CreateAuthDto } from './dto/create-auth.dto'
 import { InjectRepository } from '@nestjs/typeorm'
-import { User } from 'src/user/entities/user.entity'
+import { User, UserRole } from 'src/user/entities/user.entity'
 import { Repository } from 'typeorm'
-import { ApiResponse, formatResponse } from 'src/types/types'
+import { ApiResponse, formatResponse, LoginDataT } from 'src/types/types'
+import { UpdateAuthDto } from './dto/update-auth.dto'
+import { NotFoundError } from 'rxjs'
+import { JwtService } from '@nestjs/jwt'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private userRepository: Repository<User>,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
   private checkEmailExits = async (email: string): Promise<User | null> => {
     return await this.userRepository.findOne({ where: { email: email } })
   }
@@ -27,8 +40,27 @@ export class AuthService {
     return isMatch
   }
 
+  private async getTokens(userId: string, email: string, role: UserRole = UserRole.CUSTOMER) {
+    const payload = { sub: userId, email, role }
+
+    const [at, rt] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow<string>('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow<string>('JWT_REFRESH_TOKEN_EXPIRATION_TIME'),
+      }),
+    ])
+
+    return {
+      accessToken: at,
+      refreshToken: rt,
+    }
+  }
+
   async register(createAuthDto: CreateAuthDto): Promise<ApiResponse<null>> {
-    console.log(createAuthDto)
     if (await this.checkEmailExits(createAuthDto.email)) {
       throw new ConflictException(`Email: ${createAuthDto.email} already exits `)
     }
@@ -44,5 +76,36 @@ export class AuthService {
     return formatResponse('success', 'User created success', null)
   }
 
-  async Login() {}
+  async Login(updateAuthDto: UpdateAuthDto): Promise<ApiResponse<LoginDataT>> {
+    if (updateAuthDto.email && updateAuthDto.password) {
+      // check if user exits
+      const foundUser = await this.checkEmailExits(updateAuthDto?.email)
+      if (!foundUser) {
+        throw new NotFoundError(`Email: ${updateAuthDto.email} does not exits `)
+      }
+      // password valid check
+      if (!(await this.verifyData(updateAuthDto?.password, foundUser.password_hash))) {
+        throw new UnauthorizedException('Invalid credentials')
+      }
+      // generate token
+      const { accessToken, refreshToken } = await this.getTokens(
+        foundUser.id,
+        foundUser.email,
+        foundUser.role,
+      )
+      const loginData: LoginDataT = {
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
+        user: {
+          id: foundUser.id,
+          email: foundUser.email,
+        },
+      }
+      return formatResponse<LoginDataT>('success', 'Login was success', loginData)
+    } else {
+      throw new BadRequestException('Email is required')
+    }
+  }
 }

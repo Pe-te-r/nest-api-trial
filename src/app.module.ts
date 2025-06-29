@@ -3,6 +3,7 @@ import { UserModule } from './user/user.module'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { AuthModule } from './auth/auth.module'
+import { JwtModule } from '@nestjs/jwt'
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule } from './auth/auth.module'
         synchronize: true, // ❗ turn off in production
       }),
     }),
+    JwtModule.register({ global: true }),
     UserModule,
     AuthModule,
   ],
