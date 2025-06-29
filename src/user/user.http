@@ -1,0 +1,5 @@
+@url=http://localhost:3001/users
+
+###
+GET {{url}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmY2RkNTFhMy0zMTVhLTQwNDEtOTNjYy1iMmI2MzljNDFkNTAiLCJlbWFpbCI6InBoYW50b204NTI2QGR1Y2suY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzUxMTY3MjA2LCJleHAiOjE3NTE1MTI4MDZ9.OUEknWzlz7OT2Jw2vIiDrsqHrI0GpxHqEeGZh_qgFG4
