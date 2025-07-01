@@ -1,4 +1,4 @@
-@url=http://localhost:3001/auth
+@url=http://localhost:4001/auth
 
 ###
 POST {{url}}/login
@@ -24,4 +24,4 @@ Content-Type: application/json
 
 ###
 GET {{url}}/refresh/fcdd51a3-315a-4041-93cc-b2b639c41d50
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmY2RkNTFhMy0zMTVhLTQwNDEtOTNjYy1iMmI2MzljNDFkNTAiLCJlbWFpbCI6InBoYW50b204NTI2QGR1Y2suY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzUxMjA5MzE4LCJleHAiOjE3NTEyMTI5MTh9.mTGo696oNEG5RSyfsboQTTsgq1zo1JQxu9mrSvfvEuk
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmY2RkNTFhMy0zMTVhLTQwNDEtOTNjYy1iMmI2MzljNDFkNTAiLCJlbWFpbCI6InBoYW50b204NTI2QGR1Y2suY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzUxMjcyOTI3LCJleHAiOjE3NTEyNzY1Mjd9.KYjLzGm9VGuCyfnjfzCaUFLQOZRI01KsPcEoaPMHioI

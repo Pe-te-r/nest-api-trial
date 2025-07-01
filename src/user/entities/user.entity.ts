@@ -1,4 +1,5 @@
 import { AuthSession } from 'src/auth/entities/auth.entity'
+import { AccountStatus, UserRole } from 'src/utils/enums'
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,13 +10,6 @@ import {
   OneToOne,
 } from 'typeorm'
 
-export enum UserRole {
-  CUSTOMER = 'customer',
-  ADMIN = 'admin',
-  VENDOR = 'vendor',
-  DELIVERY = 'delivery',
-}
-
 @Entity('users')
 @Unique(['email'])
 @Unique(['phone'])
@@ -24,13 +18,19 @@ export class User {
   id: string
 
   @Column({ type: 'varchar', length: 100, nullable: false, unique: false })
-  username: string
+  fist_name: string
+
+  @Column({ type: 'varchar', length: 100, nullable: true, unique: false })
+  last_name: string
 
   @Column({ type: 'varchar', length: 150, nullable: false, unique: true })
   email: string
 
-  @Column({ type: 'varchar', length: 15 })
+  @Column({ type: 'varchar', length: 15, unique: true })
   phone: string
+
+  @Column({ type: 'text', nullable: false })
+  password_hash: string
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
   role: UserRole
@@ -38,11 +38,11 @@ export class User {
   @Column({ type: 'boolean', default: false })
   is_verified: boolean
 
-  @Column({ type: 'text', nullable: false })
-  password_hash: string
+  @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.ACTIVE })
+  account_status: AccountStatus
 
-  @Column({ type: 'bool', default: false })
-  is_blockerd: boolean
+  @Column({ type: 'date', nullable: true })
+  last_login: Date
 
   @CreateDateColumn({
     type: 'timestamp',
