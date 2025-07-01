@@ -8,13 +8,14 @@ import {
 import * as bcrypt from 'bcrypt'
 import { CreateAuthDto } from './dto/create-auth.dto'
 import { InjectRepository } from '@nestjs/typeorm'
-import { User, UserRole } from 'src/user/entities/user.entity'
+import { User } from 'src/user/entities/user.entity'
 import { Repository } from 'typeorm'
 import { ApiResponse, formatResponse, LoginDataT, payload } from 'src/types/types'
 import { UpdateAuthDto } from './dto/update-auth.dto'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { AuthSession } from './entities/auth.entity'
+import { UserRole } from 'src/utils/enums'
 
 @Injectable()
 export class AuthService {
@@ -81,7 +82,6 @@ export class AuthService {
     }
     const hashedPassword = await this.hashData(createAuthDto.password)
     const user = this.userRepository.create({
-      username: createAuthDto.username,
       email: createAuthDto.email,
       password_hash: hashedPassword,
       phone: createAuthDto.phone,

@@ -1,4 +1,4 @@
-import { UserRole } from 'src/user/entities/user.entity'
+import { UserRole } from 'src/utils/enums'
 
 type ResponseStatus = 'success' | 'error'
 
