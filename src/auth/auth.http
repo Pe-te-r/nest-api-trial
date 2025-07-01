@@ -15,7 +15,8 @@ POST  {{url}}/register
 Content-Type: application/json
 
 {
-  "username":"phantom",
+  "first_name":"phantom",
+  "last_name":"mburu",
   "email":"phantom8526@duck.com",
   "phone":"0748200233",
   "password":"123456"

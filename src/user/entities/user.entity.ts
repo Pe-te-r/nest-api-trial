@@ -18,7 +18,7 @@ export class User {
   id: string
 
   @Column({ type: 'varchar', length: 100, nullable: false, unique: false })
-  fist_name: string
+  first_name: string
 
   @Column({ type: 'varchar', length: 100, nullable: true, unique: false })
   last_name: string

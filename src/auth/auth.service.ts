@@ -63,6 +63,10 @@ export class AuthService {
     return Math.floor(100000 + Math.random() * 900000).toString()
   }
 
+  private phone_exits(phone: string) {
+    return this.userRepository.findOne({ where: { phone } })
+  }
+
   // save session method
   private async saveSession(userId: string, token: string) {
     const hashed_token = await this.hashData(token)
@@ -80,11 +84,19 @@ export class AuthService {
     if (await this.checkEmailExits(createAuthDto.email)) {
       throw new ConflictException(`Email: ${createAuthDto.email} already exits `)
     }
+    if (await this.phone_exits(createAuthDto.phone)) {
+      throw new ConflictException(`Phone number: ${createAuthDto.email} already exits `)
+    }
     const hashedPassword = await this.hashData(createAuthDto.password)
+    createAuthDto.password = hashedPassword
+    console.log('data sent', createAuthDto)
     const user = this.userRepository.create({
+      first_name: createAuthDto.first_name,
+      last_name: createAuthDto.last_name,
+      password_hash: createAuthDto.password,
       email: createAuthDto.email,
-      password_hash: hashedPassword,
       phone: createAuthDto.phone,
+      last_login: new Date(),
     })
     await this.userRepository.save(user)
 
