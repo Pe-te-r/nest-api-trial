@@ -41,9 +41,6 @@ export class User {
   @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.ACTIVE })
   account_status: AccountStatus
 
-  @Column({ type: 'date', nullable: true })
-  last_login: Date
-
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',

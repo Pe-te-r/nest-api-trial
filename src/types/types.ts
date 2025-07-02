@@ -37,3 +37,7 @@ export interface payload {
   email: string
   role: UserRole
 }
+
+export interface userIdQueryType {
+  account_modal?: string
+}

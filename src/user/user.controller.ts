@@ -1,7 +1,9 @@
 import { UserService } from './user.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
+import { userIdQueryType } from 'src/types/types'
+import { Public } from 'src/common/decorators/public.decorator'
 // import { Public } from 'src/common/decorators/public.decorator'
 
 @Controller('users')
@@ -15,13 +17,14 @@ export class UserController {
 
   @Get()
   findAll() {
-    console.log('here')
     return this.userService.findAll()
   }
 
+  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id)
+  findOne(@Param('id') id: string, @Query() query: userIdQueryType) {
+    console.log('query', query)
+    return this.userService.findOne(id, query)
   }
 
   @Patch(':id')

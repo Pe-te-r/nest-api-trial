@@ -29,6 +29,9 @@ export class AuthSession {
   @Column({ type: 'boolean', default: false })
   otp_enabled: boolean
 
+  @Column({ type: 'timestamp', nullable: true })
+  last_login: Date
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',

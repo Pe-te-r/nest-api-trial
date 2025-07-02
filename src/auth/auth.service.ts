@@ -75,6 +75,7 @@ export class AuthService {
       user: { id: userId },
       ip_address: 'Unknown',
       random_code: this.generateSixDigitCode(),
+      last_login: new Date(),
     })
     await this.sessionRepository.save(session)
   }
@@ -96,7 +97,6 @@ export class AuthService {
       password_hash: createAuthDto.password,
       email: createAuthDto.email,
       phone: createAuthDto.phone,
-      last_login: new Date(),
     })
     await this.userRepository.save(user)
 
