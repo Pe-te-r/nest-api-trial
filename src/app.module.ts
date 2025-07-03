@@ -6,6 +6,8 @@ import { JwtModule } from '@nestjs/jwt'
 import { APP_GUARD } from '@nestjs/core'
 import { AtGuard } from './auth/guard/ac.guard'
 import { MailModule } from './mail/mail.module'
+import { CountyModule } from './county/county.module'
+import { ConstituencyModule } from './constituency/constituency.module'
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { MailModule } from './mail/mail.module'
     UserModule,
     AuthModule,
     MailModule,
+    CountyModule,
+    ConstituencyModule,
   ],
   providers: [
     {
