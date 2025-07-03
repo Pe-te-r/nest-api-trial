@@ -3,8 +3,9 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { User } from './entities/user.entity'
 import { Repository } from 'typeorm'
-import { formatResponse, userIdQueryType } from 'src/types/types'
+import { allUserQuery, formatResponse, userIdQueryType } from 'src/types/types'
 import { InjectRepository } from '@nestjs/typeorm'
+import { UserRole } from 'src/utils/enums'
 
 @Injectable()
 export class UserService {
@@ -14,7 +15,69 @@ export class UserService {
     return 'This action adds a new user'
   }
 
-  findAll() {
+  async findAll(query: allUserQuery) {
+    if (query.customers === 'true') {
+      const customers = await this.userRepository.find({
+        where: {
+          role: UserRole.CUSTOMER,
+        },
+        select: [
+          'email',
+          'first_name',
+          'last_name',
+          'account_status',
+          'created_at',
+          'id',
+          'is_verified',
+          'phone',
+        ],
+      })
+      if (!customers) {
+        throw new NotFoundException('no customer details found')
+      }
+      return formatResponse('success', 'customers found', customers)
+    } else if (query.driver === 'true') {
+      console.log('query', query)
+      const drivers = await this.userRepository.find({
+        where: {
+          role: UserRole.DRIVER,
+        },
+        select: [
+          'email',
+          'first_name',
+          'last_name',
+          'account_status',
+          'created_at',
+          'id',
+          'is_verified',
+          'phone',
+        ],
+      })
+      if (!drivers) {
+        throw new NotFoundException('no customer details found')
+      }
+      return formatResponse('success', 'customers found', drivers)
+    } else if (query.admin === 'true') {
+      const admins = await this.userRepository.find({
+        where: {
+          role: UserRole.ADMIN,
+        },
+        select: [
+          'email',
+          'first_name',
+          'last_name',
+          'account_status',
+          'created_at',
+          'id',
+          'is_verified',
+          'phone',
+        ],
+      })
+      if (!admins) {
+        throw new NotFoundException('no admins details found')
+      }
+      return formatResponse('success', 'admins found', admins)
+    }
     return {
       message: `This action returns all user`,
     }

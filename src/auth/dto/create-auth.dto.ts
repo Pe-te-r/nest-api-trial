@@ -5,11 +5,11 @@ export class CreateAuthDto {
   email: string
 
   @IsString()
-  first_name: string
+  firstName: string
 
   @IsOptional()
   @IsString()
-  last_name: string
+  lastName: string
 
   @IsString()
   phone: string

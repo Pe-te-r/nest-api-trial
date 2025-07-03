@@ -2,7 +2,7 @@ import { UserService } from './user.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
-import { userIdQueryType } from 'src/types/types'
+import { allUserQuery, userIdQueryType } from 'src/types/types'
 import { Public } from 'src/common/decorators/public.decorator'
 // import { Public } from 'src/common/decorators/public.decorator'
 
@@ -15,9 +15,10 @@ export class UserController {
     return this.userService.create(createUserDto)
   }
 
+  @Public()
   @Get()
-  findAll() {
-    return this.userService.findAll()
+  findAll(@Query() query: allUserQuery) {
+    return this.userService.findAll(query)
   }
 
   @Public()

@@ -83,17 +83,18 @@ export class AuthService {
   // register method
   async register(createAuthDto: CreateAuthDto): Promise<ApiResponse<null>> {
     if (await this.checkEmailExits(createAuthDto.email)) {
+      console.log('here')
       throw new ConflictException(`Email: ${createAuthDto.email} already exits `)
     }
     if (await this.phone_exits(createAuthDto.phone)) {
-      throw new ConflictException(`Phone number: ${createAuthDto.email} already exits `)
+      throw new ConflictException(`Phone number: ${createAuthDto.phone} already exits `)
     }
     const hashedPassword = await this.hashData(createAuthDto.password)
     createAuthDto.password = hashedPassword
     console.log('data sent', createAuthDto)
     const user = this.userRepository.create({
-      first_name: createAuthDto.first_name,
-      last_name: createAuthDto.last_name,
+      first_name: createAuthDto.firstName,
+      last_name: createAuthDto.lastName,
       password_hash: createAuthDto.password,
       email: createAuthDto.email,
       phone: createAuthDto.phone,

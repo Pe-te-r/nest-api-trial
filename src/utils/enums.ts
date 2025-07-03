@@ -2,7 +2,8 @@ export enum UserRole {
   CUSTOMER = 'customer',
   ADMIN = 'admin',
   VENDOR = 'vendor',
-  DELIVERY = 'delivery',
+  SUPERADMIN = 'superadmin',
+  DRIVER = 'driver',
 }
 
 export enum AccountStatus {

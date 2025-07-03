@@ -41,3 +41,11 @@ export interface payload {
 export interface userIdQueryType {
   account_modal?: string
 }
+
+export interface allUserQuery {
+  customers?: string
+  admin?: string
+  vendor?: string
+  superadmin?: string
+  driver?: string
+}
