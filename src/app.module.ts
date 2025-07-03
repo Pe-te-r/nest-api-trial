@@ -8,6 +8,9 @@ import { AtGuard } from './auth/guard/ac.guard'
 import { MailModule } from './mail/mail.module'
 import { CountyModule } from './county/county.module'
 import { ConstituencyModule } from './constituency/constituency.module'
+import { CategoryModule } from './category/category.module';
+import { SubCategoryModule } from './sub_category/sub_category.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -21,6 +24,9 @@ import { ConstituencyModule } from './constituency/constituency.module'
     MailModule,
     CountyModule,
     ConstituencyModule,
+    CategoryModule,
+    SubCategoryModule,
+    ProductsModule,
   ],
   providers: [
     {

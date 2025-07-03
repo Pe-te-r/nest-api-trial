@@ -19,16 +19,16 @@ export class CountyController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.countyService.findOne(+id)
+    return this.countyService.findOne(id)
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCountyDto: UpdateCountyDto) {
-    return this.countyService.update(+id, updateCountyDto)
+    return this.countyService.update(id, updateCountyDto)
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.countyService.remove(+id)
+    return this.countyService.remove(id)
   }
 }

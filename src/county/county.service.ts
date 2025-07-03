@@ -1,26 +1,49 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+import { County } from './entities/county.entity'
 import { CreateCountyDto } from './dto/create-county.dto'
 import { UpdateCountyDto } from './dto/update-county.dto'
 
 @Injectable()
 export class CountyService {
-  create(createCountyDto: CreateCountyDto) {
-    return 'This action adds a new county'
+  constructor(
+    @InjectRepository(County)
+    private readonly countyRepository: Repository<County>,
+  ) {}
+
+  async create(createCountyDto: CreateCountyDto) {
+    const county = this.countyRepository.create(createCountyDto)
+    return await this.countyRepository.save(county)
   }
 
-  findAll() {
-    return `This action returns all county`
+  async findAll() {
+    return await this.countyRepository.find({
+      relations: ['constituencies'], // Include constituencies if needed
+    })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} county`
+  async findOne(id: string) {
+    const county = await this.countyRepository.findOne({
+      where: { id },
+      relations: ['constituencies'],
+    })
+    if (!county) throw new NotFoundException(`County #${id} not found`)
+    return county
   }
 
-  update(id: number, updateCountyDto: UpdateCountyDto) {
-    return `This action updates a #${id} county`
+  async update(id: string, updateCountyDto: UpdateCountyDto) {
+    const county = await this.countyRepository.preload({
+      id,
+      ...updateCountyDto,
+    })
+    if (!county) throw new NotFoundException(`County #${id} not found`)
+    return await this.countyRepository.save(county)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} county`
+  async remove(id: string) {
+    const county = await this.countyRepository.findOneBy({ id })
+    if (!county) throw new NotFoundException(`County #${id} not found`)
+    return await this.countyRepository.remove(county)
   }
 }
