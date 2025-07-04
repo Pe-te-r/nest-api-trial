@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
@@ -9,7 +10,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
   app.use(helmet())
   app.enableCors()
   const config = new DocumentBuilder()
@@ -63,6 +64,9 @@ A robust RESTful API for managing an online grocery store, providing endpoints f
     )
     .addTag('Auth', 'Authentications endpoints managements')
     .addTag('County', 'County endpoints managements')
+    .addTag('Constituency', 'Constituency endpoints managements')
+    .addTag('SubCategory', 'SubCategory endpoints managements')
+    .addTag('Category', 'Category endpoints managements')
     .addBearerAuth(
       {
         type: 'http',

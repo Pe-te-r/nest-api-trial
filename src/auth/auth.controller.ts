@@ -5,7 +5,7 @@ import { Public } from 'src/common/decorators/public.decorator'
 import { RtGuard } from './guard/rf.guard'
 import { Request } from 'express'
 import { payload } from 'src/types/types'
-import { ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -29,6 +29,7 @@ export class AuthController {
   @Public()
   @ApiOperation({ summary: 'Refresh access token with userId' })
   @UseGuards(RtGuard)
+  @ApiBearerAuth('JWT-auth')
   @Get('refresh/:id')
   async refresh(@Param('id') id: string, @Req() req: Request) {
     const payload = req?.user as payload
