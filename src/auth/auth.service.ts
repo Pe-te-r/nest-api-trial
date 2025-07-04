@@ -6,12 +6,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
-import { CreateAuthDto } from './dto/create-auth.dto'
+import { CreateAuthDto, LoginAuthDto } from './dto/create-auth.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'src/user/entities/user.entity'
 import { Repository } from 'typeorm'
 import { ApiResponse, formatResponse, LoginDataT, payload } from 'src/types/types'
-import { UpdateAuthDto } from './dto/update-auth.dto'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { AuthSession } from './entities/auth.entity'
@@ -105,7 +104,7 @@ export class AuthService {
   }
 
   // login method
-  async Login(updateAuthDto: UpdateAuthDto): Promise<ApiResponse<LoginDataT>> {
+  async Login(updateAuthDto: LoginAuthDto): Promise<ApiResponse<LoginDataT>> {
     if (updateAuthDto.email && updateAuthDto.password) {
       // check if user exits
       const foundUser = await this.checkEmailExits(updateAuthDto?.email)

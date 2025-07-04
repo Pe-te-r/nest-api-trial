@@ -17,16 +17,26 @@ export class CountyService {
     return await this.countyRepository.save(county)
   }
 
-  async findAll() {
-    return await this.countyRepository.find({
-      relations: ['constituencies'], // Include constituencies if needed
-    })
+  async findAll(includeConstituency: boolean) {
+    if (includeConstituency) {
+      return await this.countyRepository.find({
+        relations: ['constituencies'],
+      })
+    }
+    return await this.countyRepository.find()
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, includeConstituency: boolean) {
+    if (includeConstituency) {
+      const county = await this.countyRepository.findOne({
+        where: { id },
+        relations: ['constituencies'],
+      })
+      if (!county) throw new NotFoundException(`County #${id} not found`)
+      return county
+    }
     const county = await this.countyRepository.findOne({
       where: { id },
-      relations: ['constituencies'],
     })
     if (!county) throw new NotFoundException(`County #${id} not found`)
     return county

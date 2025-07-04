@@ -1,28 +1,33 @@
 import { Controller, Post, Body, Get, UseGuards, Param, Req } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { CreateAuthDto } from './dto/create-auth.dto'
+import { CreateAuthDto, LoginAuthDto } from './dto/create-auth.dto'
 import { Public } from 'src/common/decorators/public.decorator'
 import { RtGuard } from './guard/rf.guard'
 import { Request } from 'express'
 import { payload } from 'src/types/types'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @ApiOperation({ summary: 'Register Endpoints' })
   @Post('register')
   async register(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.register(createAuthDto)
   }
 
   @Public()
+  @ApiOperation({ summary: 'Login with email and username' })
   @Post('login')
-  async login(@Body() createAuthDto: CreateAuthDto) {
+  async login(@Body() createAuthDto: LoginAuthDto) {
     return this.authService.Login(createAuthDto)
   }
 
   @Public()
+  @ApiOperation({ summary: 'Refresh access token with userId' })
   @UseGuards(RtGuard)
   @Get('refresh/:id')
   async refresh(@Param('id') id: string, @Req() req: Request) {
