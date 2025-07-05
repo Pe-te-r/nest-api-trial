@@ -6,10 +6,14 @@ import { Repository } from 'typeorm'
 import { allUserQuery, formatResponse, userIdQueryType } from 'src/types/types'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UserRole } from 'src/utils/enums'
+import { AuthService } from 'src/auth/auth.service'
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private userRepository: Repository<User>,
+    private readonly authService: AuthService,
+  ) {}
   create(createUserDto: CreateUserDto) {
     console.log(createUserDto)
     return 'This action adds a new user'
@@ -112,12 +116,42 @@ export class UserService {
     return formatResponse('success', 'account_modal', null)
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    console.log(updateUserDto)
-    return `This action updates a #${id} user`
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOne({ where: { id } })
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`)
+    }
+
+    // Avoid overwriting password
+    if ('password' in updateUserDto) {
+      delete updateUserDto['password']
+    }
+
+    // Safely update fields
+    if (updateUserDto.firstName) {
+      user.first_name = updateUserDto.firstName
+    }
+    if (updateUserDto.lastName) {
+      user.last_name = updateUserDto.lastName
+    }
+    if (updateUserDto.phone) {
+      user.phone = updateUserDto.phone
+    }
+
+    // Save to database
+    await this.userRepository.save(user)
+
+    return formatResponse('success', 'User data updated successfully', null)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`
+  async remove(id: string) {
+    const result = await this.userRepository.delete(id)
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with id ${id} not found`)
+    }
+
+    return formatResponse('success', `User #${id} has been deleted`, null)
   }
 }
