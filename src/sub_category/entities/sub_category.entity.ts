@@ -1,5 +1,6 @@
 import { Category } from 'src/category/entities/category.entity'
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm'
+import { Product } from 'src/products/entities/product.entity'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm'
 
 @Entity()
 export class SubCategory {
@@ -13,4 +14,7 @@ export class SubCategory {
     onDelete: 'CASCADE',
   })
   category: Category
+
+  @OneToMany(() => Product, (product) => product.subCategory)
+  products: Product[]
 }

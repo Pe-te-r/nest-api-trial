@@ -4,6 +4,7 @@ import { Category } from './entities/category.entity'
 import { Repository } from 'typeorm'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { UpdateCategoryDto } from './dto/update-category.dto'
+import { formatResponse } from 'src/types/types'
 
 @Injectable()
 export class CategoryService {
@@ -14,13 +15,15 @@ export class CategoryService {
 
   async create(dto: CreateCategoryDto) {
     const category = this.categoryRepo.create(dto)
-    return this.categoryRepo.save(category)
+    const savedCategory = await this.categoryRepo.save(category)
+    return formatResponse('success', `category created id:${savedCategory.id}`, null)
   }
 
   async findAll(includeSub = false) {
-    return this.categoryRepo.find({
+    const categories = await this.categoryRepo.find({
       relations: includeSub ? ['subcategories'] : [],
     })
+    return formatResponse('success', 'categories retrived', categories)
   }
 
   async findOne(id: string, includeSub = false) {
@@ -33,7 +36,7 @@ export class CategoryService {
       throw new NotFoundException('Category not found')
     }
 
-    return category
+    return formatResponse('success', 'category retrived', category)
   }
 
   async update(id: string, dto: UpdateCategoryDto) {
@@ -46,7 +49,7 @@ export class CategoryService {
       throw new NotFoundException('Category not found')
     }
 
-    return this.categoryRepo.save(category)
+    return formatResponse('success', 'category updated', null)
   }
 
   async remove(id: string) {
@@ -56,6 +59,7 @@ export class CategoryService {
       throw new NotFoundException('Category not found')
     }
 
-    return this.categoryRepo.remove(category)
+    await this.categoryRepo.remove(category)
+    return formatResponse('success', 'category deleted', null)
   }
 }

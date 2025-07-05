@@ -1,26 +1,42 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
+import { formatResponse } from 'src/types/types'
 
 @Injectable()
 export class ProductsService {
   create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product'
+    console.log(createProductDto)
+    // TODO: Save to database
+    return formatResponse('success', 'Product created successfully', null)
   }
 
   findAll() {
-    return `This action returns all products`
+    // TODO: Fetch from database
+    const products = [] // Replace with actual product list
+    return formatResponse('success', 'All products retrieved', products)
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`
+  findOne(id: string) {
+    // TODO: Replace with DB query
+    const product = null // Replace with actual product logic
+
+    if (!product) {
+      throw new NotFoundException(formatResponse('error', `Product with ID ${id} not found`, null))
+    }
+
+    return formatResponse('success', 'Product found', product)
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`
+  update(id: string, updateProductDto: UpdateProductDto) {
+    // TODO: Update logic
+    const updatedProduct = { id, ...updateProductDto } // Mock
+
+    return formatResponse('success', 'Product updated successfully', updatedProduct)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`
+  remove(id: string) {
+    // TODO: Delete logic
+    return formatResponse('success', `Product with ID ${id} deleted`, null)
   }
 }
