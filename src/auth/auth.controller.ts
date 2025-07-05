@@ -6,6 +6,7 @@ import { RtGuard } from './guard/rf.guard'
 import { Request } from 'express'
 import { payload } from 'src/types/types'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { ResertDto } from './dto/update-auth.dto'
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -35,5 +36,11 @@ export class AuthController {
     const payload = req?.user as payload
     const token = req.headers.authorization?.replace('Bearer ', '') || ''
     return this.authService.refreshToken(id, token, payload)
+  }
+
+  @ApiOperation({ summary: 'Login with email and username' })
+  @Post('reset-password/:id')
+  async resetPassword(@Param('id') id: string, @Body() createAuthDto: ResertDto) {
+    return this.authService.resetPassword(id, createAuthDto)
   }
 }

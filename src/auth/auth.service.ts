@@ -15,6 +15,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { AuthSession } from './entities/auth.entity'
 import { UserRole } from 'src/utils/enums'
+import { ResertDto } from './dto/update-auth.dto'
 
 @Injectable()
 export class AuthService {
@@ -156,5 +157,19 @@ export class AuthService {
     const { accessToken } = await this.getTokens(payload.sub, payload.email, payload.role)
     console.log('new access token')
     return formatResponse<string>('success', 'New access token issued', accessToken)
+  }
+
+  async resetPassword(id: string, data: ResertDto) {
+    const user = await this.userRepository.findOne({ where: { id: id } })
+    if (!user) {
+      throw new NotFoundException(`user with ${id} not found`)
+    }
+    if (await this.verifyData(data.oldPassword, user.password_hash)) {
+      user.password_hash = await this.hashData(data.newPassword)
+      await this.userRepository.save(user)
+      return formatResponse('success', 'User data retrived success', null)
+    } else {
+      throw new UnauthorizedException('Invalid old password')
+    }
   }
 }
