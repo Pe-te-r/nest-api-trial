@@ -23,6 +23,14 @@ export class SubCategoryService {
     })
   }
 
+  async createMultiple(subCategories: CreateSubCategoryDto[]) {
+    const createdSubCategories = subCategories.map((subCategory) =>
+      this.subCategoryRepo.create(subCategory),
+    )
+
+    return this.subCategoryRepo.save(createdSubCategories)
+  }
+
   async findOne(id: string, includeCategory = false) {
     const sub = await this.subCategoryRepo.findOne({
       where: { id },
