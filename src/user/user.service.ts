@@ -41,7 +41,6 @@ export class UserService {
       }
       return formatResponse('success', 'customers found', customers)
     } else if (query.driver === 'true') {
-      console.log('query', query)
       const drivers = await this.userRepository.find({
         where: {
           role: UserRole.DRIVER,
@@ -58,9 +57,9 @@ export class UserService {
         ],
       })
       if (!drivers) {
-        throw new NotFoundException('no customer details found')
+        throw new NotFoundException('no drivers details found')
       }
-      return formatResponse('success', 'customers found', drivers)
+      return formatResponse('success', 'drivers found', drivers)
     } else if (query.admin === 'true') {
       const admins = await this.userRepository.find({
         where: {
@@ -81,6 +80,26 @@ export class UserService {
         throw new NotFoundException('no admins details found')
       }
       return formatResponse('success', 'admins found', admins)
+    } else if (query.vendor === 'true') {
+      const vendors = await this.userRepository.find({
+        where: {
+          role: UserRole.VENDOR,
+        },
+        select: [
+          'email',
+          'first_name',
+          'last_name',
+          'account_status',
+          'created_at',
+          'id',
+          'is_verified',
+          'phone',
+        ],
+      })
+      if (!vendors) {
+        throw new NotFoundException('no vendor details found')
+      }
+      return formatResponse('success', 'vendor found', vendors)
     }
     return {
       message: `This action returns all user`,

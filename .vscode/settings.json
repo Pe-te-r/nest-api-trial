@@ -2,21 +2,12 @@
   "sqltools.connections": [
     {
       "previewLimit": 50,
-      "server": "192.168.137.175",
+      "server": "192.168.137.57",
       "port": 5432,
       "driver": "PostgreSQL",
-      "name": "docker",
+      "name": "pg",
       "database": "example_db",
-      "username": "postres"
-    },
-    {
-      "previewLimit": 50,
-      "server": "192.168.137.175",
-      "port": 5432,
-      "driver": "PostgreSQL",
-      "database": "example_db",
-      "username": "postgres",
-      "name": "dockerde"
+      "username": "postgres"
     }
   ]
 }
