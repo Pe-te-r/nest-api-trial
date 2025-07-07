@@ -4,6 +4,7 @@ import { SubCategory } from './entities/sub_category.entity'
 import { Repository } from 'typeorm'
 import { CreateSubCategoryDto } from './dto/create-sub_category.dto'
 import { UpdateSubCategoryDto } from './dto/update-sub_category.dto'
+import { formatResponse } from 'src/types/types'
 
 @Injectable()
 export class SubCategoryService {
@@ -14,13 +15,15 @@ export class SubCategoryService {
 
   async create(dto: CreateSubCategoryDto) {
     const sub = this.subCategoryRepo.create(dto)
-    return this.subCategoryRepo.save(sub)
+    await this.subCategoryRepo.save(sub)
+    return formatResponse('success', `subcategory saved with id:${sub.id}`, null)
   }
 
   async findAll(includeCategory = false) {
-    return this.subCategoryRepo.find({
+    const subcategories = await this.subCategoryRepo.find({
       relations: includeCategory ? ['category'] : [],
     })
+    return formatResponse('success', 'subcategories', subcategories)
   }
 
   async createMultiple(subCategories: CreateSubCategoryDto[]) {
