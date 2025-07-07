@@ -1,15 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator'
+import { IsArray, IsNotEmpty, IsString, IsUUID, ArrayMinSize } from 'class-validator'
 
-export class CreateSubCategoryDto {
+export class CreateMultipleSubCategoriesDto {
   @ApiProperty({
-    description: 'Name of the subcategory',
-    type: 'string',
-    example: 'Citrus',
+    description: 'Array of subcategory names to create',
+    type: [String],
+    example: ['Citrus', 'Berries', 'Tropical'],
   })
-  @IsString()
-  @IsNotEmpty()
-  name: string
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  names: string[]
 
   @ApiProperty({
     description: 'UUID of the parent category',

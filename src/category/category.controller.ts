@@ -52,6 +52,19 @@ export class CategoryController {
     return this.categoryService.findOne(id, includeSub)
   }
 
+  @Public()
+  @Get(':id/subcategories')
+  @ApiOperation({ summary: 'Get a category by ID' })
+  @ApiParam({
+    name: 'id',
+    type: 'string',
+    description: 'UUID of the category',
+    example: '52df8bb3-1a8f-4c4d-97b3-48a5b6f2e1b6',
+  })
+  findOneSubs(@Param('id') id: string) {
+    return this.categoryService.findOneSUb(id)
+  }
+
   @Patch(':id')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a category by ID' })

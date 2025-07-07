@@ -2,22 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { SubCategory } from './entities/sub_category.entity'
 import { Repository } from 'typeorm'
-import { CreateSubCategoryDto } from './dto/create-sub_category.dto'
+import { CreateMultipleSubCategoriesDto } from './dto/create-sub_category.dto'
 import { UpdateSubCategoryDto } from './dto/update-sub_category.dto'
 import { formatResponse } from 'src/types/types'
+import { Category } from 'src/category/entities/category.entity'
 
 @Injectable()
 export class SubCategoryService {
   constructor(
     @InjectRepository(SubCategory)
     private readonly subCategoryRepo: Repository<SubCategory>,
+    @InjectRepository(Category)
+    private readonly CategoryRepo: Repository<Category>,
   ) {}
-
-  async create(dto: CreateSubCategoryDto) {
-    const sub = this.subCategoryRepo.create(dto)
-    await this.subCategoryRepo.save(sub)
-    return formatResponse('success', `subcategory saved with id:${sub.id}`, null)
-  }
 
   async findAll(includeCategory = false) {
     const subcategories = await this.subCategoryRepo.find({
@@ -26,12 +23,28 @@ export class SubCategoryService {
     return formatResponse('success', 'subcategories', subcategories)
   }
 
-  async createMultiple(subCategories: CreateSubCategoryDto[]) {
-    const createdSubCategories = subCategories.map((subCategory) =>
-      this.subCategoryRepo.create(subCategory),
-    )
+  async createMultiple(createDto: CreateMultipleSubCategoriesDto) {
+    // 1. Find the parent category - should use categoryRepo, not subCategoryRepo
+    const category = await this.CategoryRepo.findOne({
+      where: { id: createDto.categoryId },
+    })
 
-    return this.subCategoryRepo.save(createdSubCategories)
+    if (!category) {
+      throw new NotFoundException(`Category with id: ${createDto.categoryId} not found`)
+    }
+
+    // 2. Create subcategory entities
+    const subCategoriesToCreate = createDto.names.map((name) => {
+      return this.subCategoryRepo.create({
+        name,
+        category: category,
+      })
+    })
+
+    // 3. Save all subcategories at once
+    await this.subCategoryRepo.save(subCategoriesToCreate)
+
+    return formatResponse('success', 'Subcategories created successfully', 'null')
   }
 
   async findOne(id: string, includeCategory = false) {

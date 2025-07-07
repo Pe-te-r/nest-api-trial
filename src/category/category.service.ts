@@ -4,12 +4,15 @@ import { Category } from './entities/category.entity'
 import { Repository } from 'typeorm'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { formatResponse } from 'src/types/types'
+import { SubCategory } from 'src/sub_category/entities/sub_category.entity'
 
 @Injectable()
 export class CategoryService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+    @InjectRepository(SubCategory)
+    private readonly subCategoryRepo: Repository<SubCategory>,
   ) {}
 
   async create(dto: CreateCategoryDto) {
@@ -36,6 +39,13 @@ export class CategoryService {
     }
 
     return formatResponse('success', 'category retrived', category)
+  }
+  async findOneSUb(id: string) {
+    const category = await this.categoryRepo.find({ where: { id: id } })
+    if (!category) throw new NotFoundException(`this category not found id:${id}`)
+    const all_sub = await this.subCategoryRepo.find({ where: { category } })
+    if (!all_sub) throw new NotFoundException(`no subcategory found`)
+    return formatResponse('success', 'all subcategories', all_sub)
   }
 
   async update(id: string, dto: CreateCategoryDto) {

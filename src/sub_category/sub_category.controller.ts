@@ -1,9 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common'
 import { SubCategoryService } from './sub_category.service'
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger'
-import { CreateSubCategoryDto } from './dto/create-sub_category.dto'
+import { CreateMultipleSubCategoriesDto as CreateDt } from './dto/create-sub_category.dto'
 import { UpdateSubCategoryDto } from './dto/update-sub_category.dto'
-import { CreateMultipleSubCategoriesDto } from 'src/products/dto/update-product.dto'
 
 @ApiTags('SubCategory')
 @Controller('sub-category')
@@ -13,8 +12,8 @@ export class SubCategoryController {
   @Post()
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new subcategory' })
-  create(@Body() dto: CreateSubCategoryDto) {
-    return this.subCategoryService.create(dto)
+  create(@Body() dto: CreateDt) {
+    return this.subCategoryService.createMultiple(dto)
   }
 
   @Get()
@@ -55,12 +54,6 @@ export class SubCategoryController {
   @ApiOperation({ summary: 'Update a subcategory by ID' })
   update(@Param('id') id: string, @Body() dto: UpdateSubCategoryDto) {
     return this.subCategoryService.update(id, dto)
-  }
-
-  @Post('multiple')
-  @ApiOperation({ summary: 'Create multiple subcategories' })
-  createMultiple(@Body() dto: CreateMultipleSubCategoriesDto) {
-    return this.subCategoryService.createMultiple(dto.subCategories)
   }
 
   @Delete(':id')
