@@ -11,6 +11,7 @@ import { ConstituencyModule } from './constituency/constituency.module'
 import { CategoryModule } from './category/category.module'
 import { SubCategoryModule } from './sub_category/sub_category.module'
 import { ProductsModule } from './products/products.module'
+import { CloudinaryModule } from './cloudinary/cloudinary.module'
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProductsModule } from './products/products.module'
     CategoryModule,
     SubCategoryModule,
     ProductsModule,
+    CloudinaryModule,
   ],
   providers: [
     {

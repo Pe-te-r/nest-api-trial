@@ -14,7 +14,6 @@ export class ProductsController {
   @ApiBody({ type: CreateProductDto })
   @ApiResponse({ status: 201, description: 'Product successfully created' })
   create(@Body() createProductDto: CreateProductDto) {
-    console.log('created', createProductDto)
     return this.productsService.create(createProductDto)
   }
 

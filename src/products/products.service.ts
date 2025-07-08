@@ -2,11 +2,92 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
 import { formatResponse } from 'src/types/types'
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
+import { Readable } from 'typeorm/platform/PlatformTools.js'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Product } from './entities/product.entity'
+import { Repository } from 'typeorm'
+import { SubCategory } from 'src/sub_category/entities/sub_category.entity'
+import { User } from 'src/user/entities/user.entity'
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    console.log(createProductDto)
+  constructor(
+    private readonly cloudinaryService: CloudinaryService,
+    @InjectRepository(Product) private productRepository: Repository<Product>,
+    @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(SubCategory) private subCatRepository: Repository<SubCategory>,
+  ) {}
+  private base64ToBuffer(base64: string): { buffer: Buffer; originalname: string } {
+    // Remove the data:image/...;base64, part
+    const base64Data = base64.split(';base64,').pop() as string
+    const buffer = Buffer.from(base64Data, 'base64')
+
+    // Extract file extension from the base64 string
+    const matches = base64.match(/^data:image\/([A-Za-z-+/]+);base64,/)
+    const extension = matches ? matches[1] : 'jpg'
+
+    return {
+      buffer,
+      originalname: `image.${extension}`,
+    }
+  }
+  private async getUser(id: string) {
+    const user = await this.userRepository.findOne({ where: { id } })
+    if (!user) throw new NotFoundException(`user with id:${id} not found`)
+    return user
+  }
+
+  private async getSubCate(id: string) {
+    const subCategory = await this.subCatRepository.findOne({ where: { id } })
+    if (!subCategory) throw new NotFoundException(`subcategory with id:${id} not found`)
+    return subCategory
+  }
+
+  async create(createProductDto: CreateProductDto) {
+    let imageUrl: string | undefined
+    let publicId: string | undefined
+
+    // Upload image if provided
+    console.log('one')
+    if (createProductDto.image) {
+      console.log('two')
+      const { buffer, originalname } = this.base64ToBuffer(createProductDto.image)
+      const mockStream = new Readable()
+      mockStream.push(buffer)
+      mockStream.push(null)
+      const file: Express.Multer.File = {
+        buffer,
+        originalname,
+        encoding: '7bit',
+        mimetype: createProductDto.image.match(/^data:(.*?);/)?.[1] || 'image/jpeg',
+        size: buffer.length,
+        fieldname: 'image',
+        destination: '',
+        filename: originalname,
+        path: '',
+        stream: mockStream,
+      }
+      console.log('middle')
+      const uploadResult = await this.cloudinaryService.uploadImage(file)
+      console.log(uploadResult)
+      imageUrl = uploadResult.secure_url
+      publicId = uploadResult.public_id
+    }
+    console.log('three')
+    console.log(imageUrl, publicId)
+    const user = await this.getUser(createProductDto.createdBy)
+    const subCategory = await this.getSubCate(createProductDto.subCategory)
+    const product = this.productRepository.create({
+      imageUrl: imageUrl,
+      description: createProductDto.description,
+      isAvailable: createProductDto.isAvailable,
+      name: createProductDto.name,
+      price: createProductDto.price,
+      createdBy: user,
+      subCategory: subCategory,
+    })
+    await this.productRepository.save(product)
     // TODO: Save to database
     return formatResponse('success', 'Product created successfully', null)
   }
