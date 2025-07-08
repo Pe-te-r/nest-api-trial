@@ -26,6 +26,9 @@ export class Product {
   @Column({ nullable: true })
   imageUrl: string
 
+  @Column({ nullable: true })
+  public_id: string
+
   @Column({ type: 'text', nullable: true })
   description: string
 

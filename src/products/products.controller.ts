@@ -3,6 +3,7 @@ import { ProductsService } from './products.service'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBody } from '@nestjs/swagger'
+import { Public } from 'src/common/decorators/public.decorator'
 
 @ApiTags('Products')
 @Controller('products')
@@ -14,10 +15,12 @@ export class ProductsController {
   @ApiBody({ type: CreateProductDto })
   @ApiResponse({ status: 201, description: 'Product successfully created' })
   create(@Body() createProductDto: CreateProductDto) {
+    console.log('here to receive')
     return this.productsService.create(createProductDto)
   }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Get all products' })
   @ApiResponse({ status: 200, description: 'List of all products' })
   findAll() {

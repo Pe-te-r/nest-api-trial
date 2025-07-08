@@ -1,0 +1,3 @@
+@url = http://localhost:4001/products
+
+GET {{url}}

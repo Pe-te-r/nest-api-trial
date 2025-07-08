@@ -83,18 +83,19 @@ export class ProductsService {
       description: createProductDto.description,
       isAvailable: createProductDto.isAvailable,
       name: createProductDto.name,
+      stock: createProductDto.stock,
       price: createProductDto.price,
       createdBy: user,
       subCategory: subCategory,
+      public_id: publicId,
     })
     await this.productRepository.save(product)
-    // TODO: Save to database
     return formatResponse('success', 'Product created successfully', null)
   }
 
-  findAll() {
-    // TODO: Fetch from database
-    const products = [] // Replace with actual product list
+  async findAll() {
+    const products = await this.productRepository.find()
+    if (!products) throw new NotFoundException('no product found')
     return formatResponse('success', 'All products retrieved', products)
   }
 
