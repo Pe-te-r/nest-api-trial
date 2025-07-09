@@ -48,11 +48,7 @@ export class ProductsService {
     let imageUrl: string | undefined
     let publicId: string | undefined
 
-    // Upload image if provided
-    console.log('data', createProductDto)
-    console.log('one')
-    if (createProductDto.image) {
-      console.log('two')
+    if (createProductDto.image?.startsWith('data:image')) {
       const { buffer, originalname } = this.base64ToBuffer(createProductDto.image)
       const mockStream = new Readable()
       mockStream.push(buffer)
@@ -74,6 +70,8 @@ export class ProductsService {
       console.log(uploadResult)
       imageUrl = uploadResult.secure_url
       publicId = uploadResult.public_id
+    } else {
+      imageUrl = createProductDto.image
     }
     console.log('three')
     console.log(imageUrl, publicId)
