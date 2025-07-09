@@ -72,3 +72,13 @@ export interface CloudinaryResponse {
   original_filename: string
   api_key: string
 }
+
+// src/shared/enums/code-reason.enum.ts
+export enum CodeReason {
+  REGISTRATION = 'registration',
+  PASSWORD_RESET = 'password_reset',
+  EMAIL_VERIFICATION = 'email_verification',
+  TWO_FACTOR_AUTH = 'two_factor_auth',
+  ACCOUNT_RECOVERY = 'account_recovery',
+  SECURITY_ALERT = 'security_alert',
+}

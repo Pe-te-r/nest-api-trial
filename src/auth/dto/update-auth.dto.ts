@@ -1,7 +1,8 @@
 import { PartialType } from '@nestjs/mapped-types'
 import { CreateAuthDto } from './create-auth.dto'
-import { IsNotEmpty, IsString } from 'class-validator'
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
+import { CodeReason } from 'src/types/types'
 
 export class UpdateAuthDto extends PartialType(CreateAuthDto) {}
 
@@ -23,4 +24,17 @@ export class ResertDto {
   @IsString()
   @IsNotEmpty()
   oldPassword: string
+}
+
+export class CodeDto {
+  @ApiProperty({
+    description: 'Get otp code',
+    type: 'string',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string
+
+  @IsEnum(CodeReason)
+  reason: CodeReason
 }

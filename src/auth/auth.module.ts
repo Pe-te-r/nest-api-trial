@@ -10,12 +10,14 @@ import { AtStrategy } from './strategy/ac.strategy'
 import { AtGuard } from './guard/ac.guard'
 import { RtGuard } from './guard/rf.guard'
 import { RTStrategy } from './strategy'
+import { MailModule } from 'src/mail/mail.module'
 
 @Module({
   imports: [
     DatabaseModule,
     TypeOrmModule.forFeature([User, AuthSession]),
     JwtModule.register({ global: true }),
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AtStrategy, AtGuard, RtGuard, RTStrategy],

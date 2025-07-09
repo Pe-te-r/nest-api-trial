@@ -6,12 +6,12 @@ import { RtGuard } from './guard/rf.guard'
 import { Request } from 'express'
 import { payload } from 'src/types/types'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { ResertDto } from './dto/update-auth.dto'
+import { CodeDto, ResertDto } from './dto/update-auth.dto'
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Public()
   @ApiOperation({ summary: 'Register Endpoints' })
@@ -42,5 +42,12 @@ export class AuthController {
   @Post('reset-password/:id')
   async resetPassword(@Param('id') id: string, @Body() createAuthDto: ResertDto) {
     return this.authService.resetPassword(id, createAuthDto)
+  }
+
+  @ApiOperation({ summary: 'Get code' })
+  @Post('code')
+  async getCode(@Body() createAuthDto: CodeDto) {
+    console.log('code', createAuthDto)
+    return this.authService.getCode(createAuthDto.email, createAuthDto.reason)
   }
 }

@@ -10,12 +10,13 @@ import { CreateAuthDto, LoginAuthDto } from './dto/create-auth.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'src/user/entities/user.entity'
 import { Repository } from 'typeorm'
-import { ApiResponse, formatResponse, LoginDataT, payload } from 'src/types/types'
+import { ApiResponse, CodeReason, formatResponse, LoginDataT, payload } from 'src/types/types'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { AuthSession } from './entities/auth.entity'
 import { UserRole } from 'src/utils/enums'
 import { ResertDto } from './dto/update-auth.dto'
+import { MailService } from 'src/mail/mail.service'
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,8 @@ export class AuthService {
     @InjectRepository(AuthSession) private sessionRepository: Repository<AuthSession>,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+    private mailService: MailService,
+  ) { }
   private checkEmailExits = async (email: string): Promise<User | null> => {
     return await this.userRepository.findOne({ where: { email: email } })
   }
@@ -171,5 +173,49 @@ export class AuthService {
     } else {
       throw new UnauthorizedException('Invalid old password')
     }
+  }
+
+  private getReasonMessage(reason: CodeReason): string {
+    const reasonMessages: Record<CodeReason, string> = {
+      [CodeReason.REGISTRATION]: 'Complete your registration with groceryStore',
+      [CodeReason.PASSWORD_RESET]: 'Reset your groceryStore account password',
+      [CodeReason.EMAIL_VERIFICATION]: 'Verify your email address',
+      [CodeReason.TWO_FACTOR_AUTH]: 'Two-factor authentication login',
+      [CodeReason.ACCOUNT_RECOVERY]: 'Recover your groceryStore account',
+      [CodeReason.SECURITY_ALERT]: 'Security verification for your account',
+    }
+    return reasonMessages[reason]
+  }
+
+  async getCode(email: string, reason: CodeReason) {
+    const user_exits = await this.userRepository.findOne({
+      where: { email },
+      relations: { session: true },
+    })
+    console.log('one')
+    if (!user_exits) throw new NotFoundException('User not found')
+    console.log('two')
+
+    const session = user_exits?.session
+    // const session = await this.sessionRepository.findOne({ where: { user: user_exits } })
+    console.log('five')
+    console.log('here1', user_exits)
+    console.log('here2', session)
+    if (session) {
+      const random_code = this.generateSixDigitCode()
+      console.log('three')
+      const reasonMessage = this.getReasonMessage(reason)
+      console.log('four')
+      session.random_code = random_code
+      await this.sessionRepository.save(session)
+      await this.mailService.sendCode(
+        user_exits.email,
+        user_exits.first_name,
+        random_code,
+        reasonMessage,
+      )
+      return formatResponse('success', 'Checkout your email code sent', null)
+    }
+    return formatResponse('error', 'You need to contact admin', null)
   }
 }

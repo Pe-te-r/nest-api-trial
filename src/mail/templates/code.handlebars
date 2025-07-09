@@ -1,0 +1,208 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your One-Time Code from groceryStore</title>
+  <style type="text/css">
+    /* Client-specific styles */
+    body,
+    table,
+    td,
+    a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    table,
+    td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+
+    /* Reset styles */
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+
+    /* iOS BLUE LINKS */
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: none !important;
+      font-size: inherit !important;
+      font-family: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+    }
+
+    /* Main styles */
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #333333;
+      background-color: #f7f7f7;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      background-color: #2e7d32;
+      /* Primary green color */
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .header img {
+      max-width: 180px;
+      height: auto;
+    }
+
+    .content {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    h1 {
+      color: #2e7d32;
+      font-size: 24px;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .code-container {
+      background-color: #f1f8e9;
+      /* Light green background */
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+      margin: 25px 0;
+      border: 1px dashed #81c784;
+      /* Medium green border */
+    }
+
+    .code {
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: 5px;
+      color: #2e7d32;
+    }
+
+    .button {
+      background-color: #388e3c;
+      /* Darker green for button */
+      color: #ffffff !important;
+      display: inline-block;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #999999;
+    }
+
+    .disclaimer {
+      font-size: 12px;
+      color: #999999;
+      border-top: 1px solid #eeeeee;
+      padding-top: 15px;
+      margin-top: 25px;
+    }
+
+    .reason {
+      background-color: #e8f5e9;
+      /* Very light green */
+      padding: 10px 15px;
+      border-left: 4px solid #4caf50;
+      /* Bright green */
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header with logo -->
+    <div class="header">
+      <img src="https://yourgrocerystore.com/logo.png" alt="groceryStore" />
+    </div>
+
+    <!-- Main content -->
+    <div class="content">
+      <h1>Your One-Time Code</h1>
+
+      <p>Hello {{firstName}},</p>
+
+      {{#if reason}}
+      <div class="reason">
+        <strong>Reason for this code:</strong> {{reason}}
+      </div>
+      {{/if}}
+
+      <p>Here is your one-time verification code for your groceryStore account:</p>
+
+      <div class="code-container">
+        <div class="code">{{code}}</div>
+      </div>
+
+      <p>This code will expire in 15 minutes. If you didn't request this code, please ignore this email or contact our
+        support team immediately.</p>
+
+      {{#if actionUrl}}
+      <p>
+        <a href="{{actionUrl}}" class="button">Continue to groceryStore</a>
+      </p>
+      {{/if}}
+
+      <div class="disclaimer">
+        <p>For your security, please don't share this code with anyone. groceryStore will never ask you for your
+          password or verification codes.</p>
+        <p>© {{currentYear}} groceryStore. All rights reserved.</p>
+        <p>
+          groceryStore Inc.<br />
+          123 Fresh Food Lane, Produce City, PC 12345<br />
+          <a href="https://yourgrocerystore.com">yourgrocerystore.com</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        You're receiving this email because you or someone else requested a verification code for your account.
+        If this wasn't you, please <a href="https://yourgrocerystore.com/support">contact support</a>.
+      </p>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -52,4 +52,19 @@ export class MailService {
       },
     })
   }
+  // * used to send codes
+  async sendCode(email: string, first_name: string, code: string, reason: string) {
+    console.log('sending')
+    await this.mailerService.sendMail({
+      to: email,
+      subject: `Your groceryStore Verification Code: ${code}`,
+      template: 'code',
+      context: {
+        firstName: first_name,
+        code: code,
+        reason,
+        currentYear: new Date().getFullYear(),
+      },
+    })
+  }
 }
