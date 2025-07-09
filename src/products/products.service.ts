@@ -49,6 +49,7 @@ export class ProductsService {
     let publicId: string | undefined
 
     // Upload image if provided
+    console.log('data', createProductDto)
     console.log('one')
     if (createProductDto.image) {
       console.log('two')

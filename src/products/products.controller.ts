@@ -11,11 +11,12 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @Public()
   @ApiOperation({ summary: 'Create a new product' })
   @ApiBody({ type: CreateProductDto })
   @ApiResponse({ status: 201, description: 'Product successfully created' })
   create(@Body() createProductDto: CreateProductDto) {
-    console.log('here to receive')
+    console.log('controller data', createProductDto)
     return this.productsService.create(createProductDto)
   }
 

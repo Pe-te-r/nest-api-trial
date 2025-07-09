@@ -16,6 +16,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const message =
       exception instanceof HttpException ? exception.getResponse() : 'Internal server error'
 
+    // ✅ Log everything about the exception for debugging
+    console.error('Exception thrown:', exception)
+
+    // If it’s an object with a stack trace, log that too
+    if (exception instanceof Error) {
+      console.error('Stack trace:', exception.stack)
+    }
+
     response.status(status).json({
       status: 'error',
       message: typeof message === 'string' ? message : (message as any)?.message,
