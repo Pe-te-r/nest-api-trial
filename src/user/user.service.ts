@@ -7,11 +7,13 @@ import { allUserQuery, formatResponse, userIdQueryType } from 'src/types/types'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UserRole } from 'src/utils/enums'
 import { AuthService } from 'src/auth/auth.service'
+import { Product } from 'src/products/entities/product.entity'
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Product) private productRepository: Repository<Product>,
     private readonly authService: AuthService,
   ) {}
   create(createUserDto: CreateUserDto) {
@@ -104,6 +106,12 @@ export class UserService {
     return {
       message: `This action returns all user`,
     }
+  }
+
+  async findProducts(id: string) {
+    const products = await this.productRepository.find({ where: { createdBy: { id: id } } })
+    if (!products) throw new NotFoundException(`No products for these user found`)
+    return formatResponse('success', 'Products retrived', products)
   }
 
   async findOne(id: string, query: userIdQueryType) {

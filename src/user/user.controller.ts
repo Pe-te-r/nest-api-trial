@@ -21,11 +21,14 @@ export class UserController {
     return this.userService.findAll(query)
   }
 
-  @Public()
   @Get(':id')
   findOne(@Param('id') id: string, @Query() query: userIdQueryType) {
     console.log('query', query)
     return this.userService.findOne(id, query)
+  }
+  @Get(':id/products')
+  findProducts(@Param('id') id: string) {
+    return this.userService.findProducts(id)
   }
 
   @Patch(':id')
