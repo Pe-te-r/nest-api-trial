@@ -15,7 +15,7 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Product) private productRepository: Repository<Product>,
     private readonly authService: AuthService,
-  ) {}
+  ) { }
   create(createUserDto: CreateUserDto) {
     console.log(createUserDto)
     return 'This action adds a new user'
@@ -140,7 +140,9 @@ export class UserService {
       }
       return formatResponse('success', 'User data found', userModalData)
     }
-    return formatResponse('success', 'account_modal', null)
+    const user = await this.userRepository.findOne({ where: { id } })
+    if (!user) throw new NotFoundException('user not found')
+    return formatResponse('success', 'account_modal', user)
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {

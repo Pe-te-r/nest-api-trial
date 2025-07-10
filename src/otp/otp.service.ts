@@ -8,7 +8,7 @@ import { Repository } from 'typeorm'
 
 @Injectable()
 export class OtpService {
-  constructor(@InjectRepository(User) private userRepository: Repository<User>) { }
+  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
   private generateSecret() {
     const totpCode = speakeasy.generateSecret({ length: 24 })
     return totpCode
