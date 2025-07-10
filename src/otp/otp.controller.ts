@@ -15,4 +15,9 @@ export class TwoFactorController {
   async verify(@UserD('sub') id: string, @Body('totp') totp: string) {
     return this.otpService.verifyTotp(id, totp)
   }
+
+  @Post('disable')
+  async disableTotp(@UserD('sub') id: string) {
+    return this.otpService.disable(id)
+  }
 }

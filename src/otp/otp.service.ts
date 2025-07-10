@@ -58,4 +58,20 @@ export class OtpService {
       { verified },
     )
   }
+
+  async disable(id: string) {
+    const foundUser = await this.userRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        session: true,
+      },
+    })
+    if (!foundUser) throw new NotFoundException('user not found')
+    console.log(foundUser)
+    if (foundUser.session.otp_enabled) foundUser.session.otp_enabled = false
+    await this.userRepository.manager.save(foundUser.session)
+    return formatResponse('success', 'TOTP disbled success', null)
+  }
 }
