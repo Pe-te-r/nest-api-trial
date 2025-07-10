@@ -26,7 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailService: MailService,
-  ) { }
+  ) {}
   private checkEmailExits = async (email: string): Promise<User | null> => {
     return await this.userRepository.findOne({ where: { email: email } })
   }
@@ -205,17 +205,29 @@ export class AuthService {
       const random_code = this.generateSixDigitCode()
       console.log('three')
       const reasonMessage = this.getReasonMessage(reason)
+      console.log('this is the code', random_code)
       console.log('four')
       session.random_code = random_code
       await this.sessionRepository.save(session)
       await this.mailService.sendCode(
         user_exits.email,
         user_exits.first_name,
-        random_code,
+        session.random_code,
         reasonMessage,
       )
       return formatResponse('success', 'Checkout your email code sent', null)
     }
     return formatResponse('error', 'You need to contact admin', null)
+  }
+  async verifyCode(code: string, id: string) {
+    const user_exits = await this.userRepository.findOne({
+      where: { id },
+      relations: { session: true },
+    })
+    const session = user_exits?.session
+    if (session?.random_code !== code) {
+      return formatResponse('error', 'Wrong code', null)
+    }
+    return formatResponse('success', 'Code verified', null)
   }
 }

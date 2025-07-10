@@ -6,7 +6,8 @@ import { RtGuard } from './guard/rf.guard'
 import { Request } from 'express'
 import { payload } from 'src/types/types'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { CodeDto, ResertDto } from './dto/update-auth.dto'
+import { CodeDto, ResertDto, verifyDto } from './dto/update-auth.dto'
+import { UserD } from 'src/common/decorators/user.decorator'
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -49,5 +50,12 @@ export class AuthController {
   async getCode(@Body() createAuthDto: CodeDto) {
     console.log('code', createAuthDto)
     return this.authService.getCode(createAuthDto.email, createAuthDto.reason)
+  }
+
+  @ApiOperation({ summary: 'Get code' })
+  @Post('code/verify')
+  async verifyCode(@Body() createAuthDto: verifyDto, @UserD('sub') userId: string) {
+    console.log('code', createAuthDto)
+    return this.authService.verifyCode(createAuthDto.code, userId)
   }
 }

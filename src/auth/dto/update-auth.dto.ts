@@ -38,3 +38,12 @@ export class CodeDto {
   @IsEnum(CodeReason)
   reason: CodeReason
 }
+
+export class verifyDto {
+  @ApiProperty({
+    description: 'Verify otp code',
+    type: 'string',
+  })
+  @IsString()
+  code: string
+}
