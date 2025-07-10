@@ -13,6 +13,7 @@ import { SubCategoryModule } from './sub_category/sub_category.module'
 import { ProductsModule } from './products/products.module'
 import { CloudinaryModule } from './cloudinary/cloudinary.module'
 import { OtpModule } from './otp/otp.module'
+import { StoresModule } from './stores/stores.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { OtpModule } from './otp/otp.module'
     ProductsModule,
     CloudinaryModule,
     OtpModule,
+    StoresModule,
   ],
   providers: [
     {

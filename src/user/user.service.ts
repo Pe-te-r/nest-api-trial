@@ -15,7 +15,7 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Product) private productRepository: Repository<Product>,
     private readonly authService: AuthService,
-  ) { }
+  ) {}
   create(createUserDto: CreateUserDto) {
     console.log(createUserDto)
     return 'This action adds a new user'
