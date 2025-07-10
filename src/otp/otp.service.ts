@@ -8,7 +8,7 @@ import { Repository } from 'typeorm'
 
 @Injectable()
 export class OtpService {
-  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
+  constructor(@InjectRepository(User) private userRepository: Repository<User>) { }
   private generateSecret() {
     const totpCode = speakeasy.generateSecret({ length: 24 })
     return totpCode
@@ -30,6 +30,7 @@ export class OtpService {
   }
 
   async verifyTotp(id: string, code: string) {
+    console.log('code sent', code)
     const foundUser = await this.userRepository.findOne({
       where: { id },
       relations: { session: true },
@@ -38,13 +39,18 @@ export class OtpService {
     if (!foundUser || !foundUser.session?.otp_code) {
       throw new NotFoundException('User or OTP not found')
     }
-
+    console.log('foundUser', foundUser)
     const verified = speakeasy.totp.verify({
       secret: foundUser.session.otp_code,
       encoding: 'base32',
       token: code,
       window: 1,
     })
+    console.log('found verified', verified)
+    if (verified && !foundUser.session.otp_enabled) {
+      foundUser.session.otp_enabled = true
+      await this.userRepository.manager.save(foundUser.session)
+    }
 
     return formatResponse(
       verified ? 'success' : 'error',
