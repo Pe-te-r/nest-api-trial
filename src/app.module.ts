@@ -12,6 +12,7 @@ import { CategoryModule } from './category/category.module'
 import { SubCategoryModule } from './sub_category/sub_category.module'
 import { ProductsModule } from './products/products.module'
 import { CloudinaryModule } from './cloudinary/cloudinary.module'
+import { OtpModule } from './otp/otp.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module'
     SubCategoryModule,
     ProductsModule,
     CloudinaryModule,
+    OtpModule,
   ],
   providers: [
     {

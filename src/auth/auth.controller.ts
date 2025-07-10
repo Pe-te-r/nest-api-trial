@@ -12,7 +12,7 @@ import { UserD } from 'src/common/decorators/user.decorator'
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @ApiOperation({ summary: 'Register Endpoints' })

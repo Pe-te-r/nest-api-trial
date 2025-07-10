@@ -5,8 +5,8 @@
   "compilerOptions": {
     "assets": [
       {
-        "include": "**/mailer/templates/**/*",
-        "outDir": "dist/mailer/templates"
+        "include": "**/mail/templates/**/*",
+        "outDir": "dist/"
       }
     ],
     "watchAssets": true,
