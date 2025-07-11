@@ -5,6 +5,7 @@ import { Repository } from 'typeorm'
 import { CreateConstituencyDto } from './dto/create-constituency.dto'
 import { UpdateConstituencyDto } from './dto/update-constituency.dto'
 import { County } from 'src/county/entities/county.entity'
+import { formatResponse } from 'src/types/types'
 
 @Injectable()
 export class ConstituencyService {
@@ -33,16 +34,24 @@ export class ConstituencyService {
     return this.constituencyRepository.save(newConstituency)
   }
 
-  async findAll(includeCounty = false) {
-    return this.constituencyRepository.find({
-      relations: includeCounty ? ['county'] : [],
+  async findAll(county_name: string) {
+    const county = await this.countyRepository.findOne({
+      where: { county_name: county_name },
     })
+    if (!county) throw new NotFoundException('No information found')
+    const constituencies = await this.constituencyRepository.find({ where: { county } })
+    if (!constituencies) throw new NotFoundException('No data foundS')
+    const constituencies_json: { id: string; name: string }[] = []
+    constituencies.forEach((constituency) =>
+      constituencies_json.push({ id: constituency.id, name: constituency.name }),
+    )
+    console.log(constituencies_json)
+    return formatResponse('success', 'Retrival was success', constituencies_json)
   }
 
-  async findOne(id: string, includeCounty = false) {
+  async findOne(id: string) {
     const constituency = await this.constituencyRepository.findOne({
       where: { id },
-      relations: includeCounty ? ['county'] : [],
     })
 
     if (!constituency) {

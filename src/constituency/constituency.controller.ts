@@ -22,8 +22,8 @@ export class ConstituencyController {
   @ApiQuery({ name: 'county', required: false, type: Boolean })
   @ApiOperation({ summary: 'Get a list of all constituencies' })
   findAll(@Query('county') county: string) {
-    const includeCounty = county === 'true'
-    return this.constituencyService.findAll(includeCounty)
+    console.log('count', county)
+    return this.constituencyService.findAll(county)
   }
 
   @Get(':id')
@@ -36,9 +36,8 @@ export class ConstituencyController {
     type: 'string',
     example: 'f2ab0d47-06ee-4f8d-b0e5-d303b5a145e1',
   })
-  findOne(@Param('id') id: string, @Query('county') county: string) {
-    const includeCounty = county === 'true'
-    return this.constituencyService.findOne(id, includeCounty)
+  findOne(@Param('id') id: string) {
+    return this.constituencyService.findOne(id)
   }
 
   @Patch(':id')

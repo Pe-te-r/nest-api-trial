@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { County } from './entities/county.entity'
 import { CreateCountyDto } from './dto/create-county.dto'
 import { UpdateCountyDto } from './dto/update-county.dto'
+import { formatResponse } from 'src/types/types'
 
 @Injectable()
 export class CountyService {
@@ -23,7 +24,8 @@ export class CountyService {
         relations: ['constituencies'],
       })
     }
-    return await this.countyRepository.find()
+    const counties = await this.countyRepository.find()
+    return formatResponse('success', 'All counties retrived', counties)
   }
 
   async findOne(id: string, includeConstituency: boolean) {
