@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common'
 import { ConstituencyService } from './constituency.service'
-import { CreateConstituencyDto } from './dto/create-constituency.dto'
+import { CreateMultipleConstituenciesDto } from './dto/create-constituency.dto'
 import { UpdateConstituencyDto } from './dto/update-constituency.dto'
 import { Public } from 'src/common/decorators/public.decorator'
 import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger'
@@ -13,8 +13,8 @@ export class ConstituencyController {
   @Post()
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new constituency' })
-  create(@Body() createConstituencyDto: CreateConstituencyDto) {
-    return this.constituencyService.create(createConstituencyDto)
+  create(@Body() createConstituencyDto: CreateMultipleConstituenciesDto) {
+    return this.constituencyService.createMultiple(createConstituencyDto)
   }
 
   @Get()

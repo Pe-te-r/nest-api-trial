@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Constituency } from './entities/constituency.entity'
 import { Repository } from 'typeorm'
-import { CreateConstituencyDto } from './dto/create-constituency.dto'
+import { CreateMultipleConstituenciesDto } from './dto/create-constituency.dto'
 import { UpdateConstituencyDto } from './dto/update-constituency.dto'
 import { County } from 'src/county/entities/county.entity'
 import { formatResponse } from 'src/types/types'
@@ -12,26 +12,32 @@ export class ConstituencyService {
   constructor(
     @InjectRepository(Constituency)
     private readonly constituencyRepository: Repository<Constituency>,
+    @InjectRepository(County)
+    private readonly countyRepo: Repository<County>,
 
     @InjectRepository(County)
     private readonly countyRepository: Repository<County>,
   ) {}
 
-  async create(createConstituencyDto: CreateConstituencyDto) {
-    const county = await this.countyRepository.findOne({
-      where: { id: createConstituencyDto.countyId },
+  async createMultiple(createDto: CreateMultipleConstituenciesDto) {
+    // 1. Find the county
+    const county = await this.countyRepo.findOne({
+      where: { id: createDto.county_id },
     })
 
     if (!county) {
-      throw new NotFoundException('County not found')
+      throw new NotFoundException(`County with id: ${createDto.county_id} not found`)
     }
 
-    const newConstituency = this.constituencyRepository.create({
-      name: createConstituencyDto.name,
-      county,
+    // 2. Create constituency entities
+    const constituenciesToCreate = createDto.constituencies.map((name: string) => {
+      return this.constituencyRepository.create({ name, county })
     })
 
-    return this.constituencyRepository.save(newConstituency)
+    // 3. Save all constituencies at once
+    await this.constituencyRepository.save(constituenciesToCreate)
+
+    return formatResponse('success', 'Constituencies created successfully', null)
   }
 
   async findAll(county_name: string) {
