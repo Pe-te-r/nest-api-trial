@@ -1,5 +1,6 @@
 import { County } from 'src/county/entities/county.entity'
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm'
+import { Store } from 'src/stores/entities/store.entity'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm'
 
 @Entity()
 export class Constituency {
@@ -13,4 +14,7 @@ export class Constituency {
     onDelete: 'CASCADE',
   })
   county: County
+
+  @OneToMany(() => Store, (store) => store.constituency)
+  stores: Store[]
 }

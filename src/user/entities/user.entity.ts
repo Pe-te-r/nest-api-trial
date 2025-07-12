@@ -1,5 +1,6 @@
 import { AuthSession } from 'src/auth/entities/auth.entity'
 import { Product } from 'src/products/entities/product.entity'
+import { Store } from 'src/stores/entities/store.entity'
 import { AccountStatus, UserRole } from 'src/utils/enums'
 import {
   Entity,
@@ -61,4 +62,7 @@ export class User {
 
   @OneToMany(() => Product, (product) => product.createdBy)
   products: Product[]
+
+  @OneToOne(() => Store, (store) => store.user)
+  store: Store
 }
