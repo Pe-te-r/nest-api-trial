@@ -22,6 +22,11 @@ export class StoresController {
     return this.storesService.findOne(id)
   }
 
+  @Get(':id/applied')
+  checkApplied(@Param('id', ParseUUIDPipe) id: string) {
+    return this.storesService.checkIfApplied(id)
+  }
+
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateStoreDto: UpdateStoreDto) {
     return this.storesService.update(id, updateStoreDto)

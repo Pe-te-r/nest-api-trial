@@ -20,6 +20,7 @@ export class StoresService {
   ) {}
 
   async create(createStoreDto: CreateStoreDto) {
+    console.log('data received', createStoreDto)
     // Verify user exists
     const user = await this.userRepository.findOneBy({ id: createStoreDto.userId })
     if (!user) {
@@ -62,6 +63,12 @@ export class StoresService {
     }
 
     return store
+  }
+  async checkIfApplied(id: string) {
+    const user = await this.userRepository.findOne({ where: { id }, relations: { store: true } })
+    if (!user) throw new NotFoundException('These user not found')
+    const store = user.store
+    return formatResponse('success', 'Applied already available', store.approved)
   }
 
   async update(id: string, updateStoreDto: UpdateStoreDto): Promise<Store> {
