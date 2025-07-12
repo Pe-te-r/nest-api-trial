@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm'
 import { SubCategory } from 'src/sub_category/entities/sub_category.entity'
-import { User } from 'src/user/entities/user.entity'
+import { Store } from 'src/stores/entities/store.entity'
 
 @Entity()
 export class Product {
@@ -48,8 +48,8 @@ export class Product {
   subCategory: SubCategory
 
   //  Relation: many products to one user (who added/owns it)
-  @ManyToOne(() => User, (user) => user.products, {
+  @ManyToOne(() => Store, (store) => store.products, {
     onDelete: 'CASCADE',
   })
-  createdBy: User
+  store: Store
 }

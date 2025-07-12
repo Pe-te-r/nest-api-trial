@@ -17,7 +17,7 @@ export class ProductsService {
     @InjectRepository(Product) private productRepository: Repository<Product>,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(SubCategory) private subCatRepository: Repository<SubCategory>,
-  ) {}
+  ) { }
   private base64ToBuffer(base64: string): { buffer: Buffer; originalname: string } {
     // Remove the data:image/...;base64, part
     const base64Data = base64.split(';base64,').pop() as string
@@ -33,7 +33,7 @@ export class ProductsService {
     }
   }
   private async getUser(id: string) {
-    const user = await this.userRepository.findOne({ where: { id } })
+    const user = await this.userRepository.findOne({ where: { id }, relations: { store: true } })
     if (!user) throw new NotFoundException(`user with id:${id} not found`)
     return user
   }
@@ -65,7 +65,6 @@ export class ProductsService {
         path: '',
         stream: mockStream,
       }
-      console.log('middle')
       const uploadResult = await this.cloudinaryService.uploadImage(file)
       console.log(uploadResult)
       imageUrl = uploadResult.secure_url
@@ -73,8 +72,6 @@ export class ProductsService {
     } else {
       imageUrl = createProductDto.image
     }
-    console.log('three')
-    console.log(imageUrl, publicId)
     const user = await this.getUser(createProductDto.createdBy)
     const subCategory = await this.getSubCate(createProductDto.subCategory)
     const product = this.productRepository.create({
@@ -84,7 +81,7 @@ export class ProductsService {
       name: createProductDto.name,
       stock: createProductDto.stock,
       price: createProductDto.price,
-      createdBy: user,
+      store: user.store,
       subCategory: subCategory,
       public_id: publicId,
     })

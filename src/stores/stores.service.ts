@@ -7,6 +7,7 @@ import { Store } from './entities/store.entity'
 import { User } from 'src/user/entities/user.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { formatResponse } from 'src/types/types'
+import { UserRole } from 'src/utils/enums'
 
 @Injectable()
 export class StoresService {
@@ -51,7 +52,53 @@ export class StoresService {
       relations: ['user', 'constituency', 'constituency.county'],
     })
   }
+  async findForAdmin() {
+    const shops = await this.storeRepository.find({
+      relations: {
+        user: true,
+        constituency: true,
+      },
+      select: {
+        id: true,
+        businessName: true,
+        businessDescription: true,
+        businessType: true,
+        businessContact: true,
+        streetAddress: true,
+        approved: true,
+        user: {
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true,
+        },
+        constituency: {
+          name: true,
+        },
+      },
+    })
 
+    const formattedShops = shops.map((shop) => ({
+      id: shop.id,
+      businessName: shop.businessName,
+      businessDescription: shop.businessDescription,
+      businessType: shop.businessType,
+      businessContact: shop.businessContact,
+      streetAddress: shop.streetAddress,
+      approved: shop.approved,
+      user: {
+        first_name: shop.user.first_name,
+        last_name: shop.user.last_name,
+        email: shop.user.email,
+        phone: shop.user.phone,
+      },
+      constituency: {
+        name: shop.constituency.name,
+      },
+    }))
+
+    return formatResponse('success', 'Shops retrieved successfully', formattedShops)
+  }
   async findOne(id: string): Promise<Store> {
     const store = await this.storeRepository.findOne({
       where: { id },
@@ -68,33 +115,37 @@ export class StoresService {
     const user = await this.userRepository.findOne({ where: { id }, relations: { store: true } })
     if (!user) throw new NotFoundException('These user not found')
     const store = user.store
-    return formatResponse('success', 'Applied already available', store.approved)
+    return formatResponse('success', 'Applied already available', store?.approved)
   }
 
-  async update(id: string, updateStoreDto: UpdateStoreDto): Promise<Store> {
-    const store = await this.storeRepository.preload({
-      id,
-      ...updateStoreDto,
-    })
-
-    if (!store) {
-      throw new NotFoundException(`Store with ID ${id} not found`)
-    }
-
-    // If updating constituency
-    if (updateStoreDto.constituencyId) {
-      const constituency = await this.constituencyRepository.findOneBy({
-        id: updateStoreDto.constituencyId,
+  async update(id: string, updateStoreDto: UpdateStoreDto) {
+    // Start a transaction to ensure both updates succeed or fail together
+    return this.storeRepository.manager.transaction(async (transactionalEntityManager) => {
+      // Find the store with its user relation
+      const store = await transactionalEntityManager.findOne(Store, {
+        where: { id },
+        relations: ['user'], // Make sure to include the user relation
       })
-      if (!constituency) {
-        throw new NotFoundException(
-          `Constituency with ID ${updateStoreDto.constituencyId} not found`,
-        )
-      }
-      store.constituency = constituency
-    }
 
-    return this.storeRepository.save(store)
+      if (!store) {
+        throw new NotFoundException(`Store with ID ${id} not found`)
+      }
+
+      // Update store properties
+      Object.assign(store, updateStoreDto)
+
+      // If the store is being approved and the user is currently a customer
+      if (updateStoreDto.approved && store.user.role === UserRole.CUSTOMER) {
+        // Update the user's role
+        store.user.role = UserRole.VENDOR
+        await transactionalEntityManager.save(store.user)
+      }
+
+      // Save the store
+      await transactionalEntityManager.save(store)
+
+      return formatResponse('success', 'Store updated successfully', null)
+    })
   }
 
   async remove(id: string): Promise<void> {

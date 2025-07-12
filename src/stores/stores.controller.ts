@@ -16,6 +16,10 @@ export class StoresController {
   findAll() {
     return this.storesService.findAll()
   }
+  @Get('admin')
+  findForAdmin() {
+    return this.storesService.findForAdmin()
+  }
 
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {

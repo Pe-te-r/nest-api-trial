@@ -1,6 +1,15 @@
 import { Constituency } from 'src/constituency/entities/constituency.entity'
+import { Product } from 'src/products/entities/product.entity'
 import { User } from 'src/user/entities/user.entity'
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, JoinColumn } from 'typeorm'
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm'
 
 @Entity()
 export class Store {
@@ -36,4 +45,7 @@ export class Store {
   // Many-to-one relationship with Constituency
   @ManyToOne(() => Constituency, (constituency) => constituency.stores)
   constituency: Constituency
+
+  @OneToMany(() => Product, (product) => product.store)
+  products: Product[]
 }
