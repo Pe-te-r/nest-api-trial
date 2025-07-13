@@ -17,7 +17,7 @@ export class ProductsService {
     @InjectRepository(Product) private productRepository: Repository<Product>,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(SubCategory) private subCatRepository: Repository<SubCategory>,
-  ) { }
+  ) {}
   private base64ToBuffer(base64: string): { buffer: Buffer; originalname: string } {
     // Remove the data:image/...;base64, part
     const base64Data = base64.split(';base64,').pop() as string

@@ -14,6 +14,9 @@ import { ProductsModule } from './products/products.module'
 import { CloudinaryModule } from './cloudinary/cloudinary.module'
 import { OtpModule } from './otp/otp.module'
 import { StoresModule } from './stores/stores.module'
+import { PickStationModule } from './pick_station/pick_station.module'
+import { DriverModule } from './driver/driver.module'
+import { OrdersModule } from './orders/orders.module'
 
 @Module({
   imports: [
@@ -33,6 +36,9 @@ import { StoresModule } from './stores/stores.module'
     CloudinaryModule,
     OtpModule,
     StoresModule,
+    PickStationModule,
+    DriverModule,
+    OrdersModule,
   ],
   providers: [
     {
