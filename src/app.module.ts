@@ -17,6 +17,9 @@ import { StoresModule } from './stores/stores.module'
 import { PickStationModule } from './pick_station/pick_station.module'
 import { DriverModule } from './driver/driver.module'
 import { OrdersModule } from './orders/orders.module'
+import { AssigmentsModule } from './assigments/assigments.module'
+import { AssignmentModule } from './assignment/assignment.module'
+import { CustomersModule } from './customers/customers.module'
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { OrdersModule } from './orders/orders.module'
     PickStationModule,
     DriverModule,
     OrdersModule,
+    AssigmentsModule,
+    AssignmentModule,
+    CustomersModule,
   ],
   providers: [
     {

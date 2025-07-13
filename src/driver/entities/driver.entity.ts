@@ -1,5 +1,6 @@
-import { User } from 'src/users/entities/user.entity'
-import { DriverStatus, VehicleType } from 'src/utils/enums'
+import { Assignment } from 'src/assignment/entities/assignment.entity'
+import { DriverStatus, VehicleType } from 'src/types/types'
+import { User } from 'src/user/entities/user.entity'
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,6 +9,7 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm'
 
 @Entity('drivers')
@@ -19,29 +21,24 @@ export class Driver {
   @JoinColumn({ name: 'user_id' })
   user: User
 
-  // Simplified location simulation
   @Column({ type: 'varchar', length: 50, default: 'zone_1' })
   current_zone: string
 
   @Column({ type: 'enum', enum: DriverStatus, default: DriverStatus.OFFLINE })
   status: DriverStatus
 
-  @Column({ type: 'enum', enum: VehicleType, nullable: false })
+  @Column({ type: 'enum', enum: VehicleType, default: VehicleType.TRUCK, nullable: false })
   vehicle_type: VehicleType
 
   @Column({ type: 'varchar', length: 20, nullable: false })
   license_plate: string
-
-  // Simulation-specific fields
-  @Column({ type: 'boolean', default: true })
-  is_active: boolean
-
-  @Column({ type: 'int', default: 0 })
-  simulation_speed: number // 0-10 for mock movement speed
 
   @CreateDateColumn()
   created_at: Date
 
   @UpdateDateColumn()
   updated_at: Date
+
+  @OneToMany(() => Assignment, (assignment) => assignment.driver)
+  assignments: Assignment[]
 }

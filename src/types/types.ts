@@ -82,3 +82,39 @@ export enum CodeReason {
   ACCOUNT_RECOVERY = 'account_recovery',
   SECURITY_ALERT = 'security_alert',
 }
+
+export enum DriverStatus {
+  OFFLINE = 'offline',
+  AVAILABLE = 'available',
+  ASSIGNED = 'assigned',
+  IN_TRANSIT = 'in_transit',
+  ON_BREAK = 'on_break',
+}
+
+export enum VehicleType {
+  MOTORCYCLE = 'motorcycle',
+  CAR = 'car',
+  VAN = 'van',
+  TRUCK = 'truck',
+  BICYCLE = 'bicycle',
+}
+
+export enum AssignmentStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export enum OrderStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  ASSEMBLING = 'assembling',
+  READY_FOR_PICKUP = 'ready_for_pickup',
+  IN_TRANSIT = 'in_transit',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  FAILED = 'failed',
+}
