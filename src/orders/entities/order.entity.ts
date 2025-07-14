@@ -39,9 +39,6 @@ export class Order {
   })
   status: OrderStatus
 
-  @Column({ type: 'timestamp', nullable: true })
-  scheduledPickupTime: Date
-
   @Column({ type: 'text', nullable: true })
   specialInstructions: string
 
@@ -61,6 +58,21 @@ export class Order {
   })
   updated_at: Date
 
+  @Column({ type: 'enum', enum: ['pickup', 'delivery'] })
+  deliveryOption: 'pickup' | 'delivery'
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  deliveryFee: number
+
+  @Column({ type: 'text', nullable: true })
+  deliveryInstructions: string
+
+  @Column({ type: 'enum', enum: ['mpesa', 'wallet'] , default: 'mpesa' })
+  paymentMethod: 'mpesa' | 'wallet'
+
+  @Column({ type: 'varchar', nullable: true })
+  paymentPhone: string
+
   get itemCount(): number {
     return this.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
   }
@@ -70,15 +82,6 @@ export class Order {
     return [...new Set(this.items.map((item) => item.vendor))]
   }
 
-  // get itemsByVendor(): { [vendorId: string]: OrderItem[] } {
-  //   if (!this.items) return {}
-  //   return this.items.reduce((acc, item) => {
-  //     const vendorId = item.vendor.id
-  //     if (!acc[vendorId]) acc[vendorId] = []
-  //     acc[vendorId].push(item)
-  //     return acc
-  //   }, {})
-  // }
 }
 
 @Entity('order_items')
