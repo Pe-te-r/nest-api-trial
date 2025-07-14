@@ -1,51 +1,5 @@
 // src/order-items/entities/order-item.entity.ts
 import { Product } from 'src/products/entities/product.entity'
-
-@Entity('order_items')
-export class OrderItem {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
-
-  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'order_id' })
-  order: Order
-
-  @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
-  product: Product
-
-  @ManyToOne(() => Store)
-  @JoinColumn({ name: 'vendor_id' })
-  vendor: Store
-
-  @Column({ type: 'int' })
-  quantity: number
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  priceAtPurchase: number
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  selectedVariant: string
-
-  @Column({ type: 'text', nullable: true })
-  specialRequest: string
-
-  @Column({
-    type: 'enum',
-    enum: OrderStatus,
-    default: OrderStatus.PENDING,
-  })
-  itemStatus: OrderStatus // Individual item status
-
-  @OneToOne(() => Assignment, (assignment) => assignment.orderItem, { cascade: true })
-  assignment: Assignment
-
-  // Calculated field (not stored in DB)
-  get totalPrice(): number {
-    return this.priceAtPurchase * this.quantity
-  }
-}
-
 // src/orders/entities/order.entity.ts
 import { Customer } from 'src/customers/entities/customer.entity'
 import { OrderStatus } from 'src/types/types'
@@ -119,4 +73,49 @@ export class Order {
   //     return acc
   //   }, {})
   // }
+}
+
+@Entity('order_items')
+export class OrderItem {
+  @PrimaryGeneratedColumn('uuid')
+  id: string
+
+  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'order_id' })
+  order: Order
+
+  @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
+  product: Product
+
+  @ManyToOne(() => Store)
+  @JoinColumn({ name: 'vendor_id' })
+  vendor: Store
+
+  @Column({ type: 'int' })
+  quantity: number
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  priceAtPurchase: number
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  selectedVariant: string
+
+  @Column({ type: 'text', nullable: true })
+  specialRequest: string
+
+  @Column({
+    type: 'enum',
+    enum: OrderStatus,
+    default: OrderStatus.PENDING,
+  })
+  itemStatus: OrderStatus // Individual item status
+
+  @OneToOne(() => Assignment, (assignment) => assignment.orderItem, { cascade: true })
+  assignment: Assignment
+
+  // Calculated field (not stored in DB)
+  get totalPrice(): number {
+    return this.priceAtPurchase * this.quantity
+  }
 }

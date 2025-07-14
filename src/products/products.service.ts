@@ -90,7 +90,10 @@ export class ProductsService {
   }
 
   async findAll() {
-    const products = await this.productRepository.find()
+    const products = await this.productRepository.find({
+      relations: { store: true },
+      select: { store: { id: true } },
+    })
     if (!products) throw new NotFoundException('no product found')
     return formatResponse('success', 'All products retrieved', products)
   }
