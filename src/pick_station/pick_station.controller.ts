@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PickStationService } from './pick_station.service'
 import { CreatePickStationDto } from './dto/create-pick_station.dto'
 import { UpdatePickStationDto } from './dto/update-pick_station.dto'
+import { Public } from 'src/common/decorators/public.decorator'
 
 @Controller('pickup-stations')
 export class PickStationController {
@@ -20,6 +21,12 @@ export class PickStationController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pickStationService.findOne(id)
+  }
+
+  @Public()
+   @Get(':id/county')
+  findByCounty(@Param('id') id: string) {
+    return this.pickStationService.findByCounty(id)
   }
 
   @Patch(':id')

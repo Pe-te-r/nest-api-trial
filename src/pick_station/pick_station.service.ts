@@ -44,6 +44,11 @@ export class PickStationService {
     return this.pickStationRepository.findOne({ where: { id }, relations: ['constituency', 'orders'] })
   }
 
+   findByCounty(countyId: string) {
+    return this.pickStationRepository.find({ where: { constituency: { county: { id: countyId } } }, relations: ['constituency'] })
+  }
+
+
   async update(id: string, updatePickStationDto: UpdatePickStationDto) {
     await this.pickStationRepository.update(id, updatePickStationDto)
     return this.findOne(id)
