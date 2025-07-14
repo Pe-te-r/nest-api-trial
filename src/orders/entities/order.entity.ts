@@ -48,13 +48,19 @@ export class Order {
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items: OrderItem[]
 
-  @CreateDateColumn()
-  createdAt: Date
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  created_at: Date
 
-  @UpdateDateColumn()
-  updatedAt: Date
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updated_at: Date
 
-  // Calculated fields (not stored in DB)
   get itemCount(): number {
     return this.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
   }
@@ -95,27 +101,13 @@ export class OrderItem {
   @Column({ type: 'int' })
   quantity: number
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  priceAtPurchase: number
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  selectedVariant: string
-
-  @Column({ type: 'text', nullable: true })
-  specialRequest: string
-
   @Column({
     type: 'enum',
     enum: OrderStatus,
     default: OrderStatus.PENDING,
   })
-  itemStatus: OrderStatus // Individual item status
+  itemStatus: OrderStatus
 
   @OneToOne(() => Assignment, (assignment) => assignment.orderItem, { cascade: true })
   assignment: Assignment
-
-  // Calculated field (not stored in DB)
-  get totalPrice(): number {
-    return this.priceAtPurchase * this.quantity
-  }
 }
