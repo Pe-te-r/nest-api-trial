@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
 import { CreatePickStationDto } from './dto/create-pick_station.dto'
 import { UpdatePickStationDto } from './dto/update-pick_station.dto'
+import { PickStation } from './entities/pick_station.entity'
+import { Constituency } from '../constituency/entities/constituency.entity'
 
 @Injectable()
 export class PickStationService {
-  create(createPickStationDto: CreatePickStationDto) {
-    return 'This action adds a new pickStation'
+  constructor(
+    @InjectRepository(PickStation)
+    private readonly pickStationRepository: Repository<PickStation>,
+    @InjectRepository(Constituency)
+    private readonly constituencyRepository: Repository<Constituency>,
+  ) {}
+
+  async create(createPickStationDto: CreatePickStationDto) {
+    const constituency = await this.constituencyRepository.findOne({ where: { id: createPickStationDto.constituencyId } })
+    if (!constituency) throw new Error('Constituency not found')
+    const pickStation = this.pickStationRepository.create({
+      ...createPickStationDto,
+      constituency,
+    })
+    return this.pickStationRepository.save(pickStation)
   }
 
   findAll() {
-    return `This action returns all pickStation`
+    return this.pickStationRepository.find({ relations: ['constituency', 'orders'] })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pickStation`
+  findOne(id: string) {
+    return this.pickStationRepository.findOne({ where: { id }, relations: ['constituency', 'orders'] })
   }
 
-  update(id: number, updatePickStationDto: UpdatePickStationDto) {
-    return `This action updates a #${id} pickStation`
+  async update(id: string, updatePickStationDto: UpdatePickStationDto) {
+    await this.pickStationRepository.update(id, updatePickStationDto)
+    return this.findOne(id)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pickStation`
+  async remove(id: string) {
+    await this.pickStationRepository.delete(id)
+    return { deleted: true }
   }
 }
