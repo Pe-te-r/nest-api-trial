@@ -23,7 +23,6 @@ export class PickStationController {
     return this.pickStationService.findOne(id)
   }
 
-  @Public()
    @Get(':id/county')
   findByCounty(@Param('id') id: string) {
     return this.pickStationService.findByCounty(id)
