@@ -1,5 +1,6 @@
 // src/assignments/entities/assignment.entity.ts
-import { Order } from 'src/orders/entities/order.entity'
+import { Driver } from 'src/driver/entities/driver.entity'
+import { OrderItem } from 'src/orders/entities/order.entity'
 import { AssignmentStatus } from 'src/types/types'
 import {
   Entity,
@@ -8,8 +9,9 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Column,
+  JoinColumn,
+  OneToOne,
 } from 'typeorm'
-import { Driver } from 'typeorm/browser'
 
 @Entity('assignments')
 export class Assignment {
@@ -19,8 +21,9 @@ export class Assignment {
   @ManyToOne(() => Driver, (driver) => driver.assignments)
   driver: Driver
 
-  @ManyToOne(() => Order, (order) => order.assignments)
-  order: Order
+  @OneToOne(() => OrderItem, (orderItem) => orderItem.assignment)
+  @JoinColumn({ name: 'order_item_id' })
+  orderItem: OrderItem
 
   @Column({
     type: 'enum',

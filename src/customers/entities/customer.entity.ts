@@ -1,7 +1,6 @@
-// src/customers/entities/customer.entity.ts
 import { Order } from 'src/orders/entities/order.entity'
-import { User } from 'src/users/entities/user.entity'
-import { Entity, PrimaryGeneratedColumn, OneToOne, OneToMany } from 'typeorm'
+import { User } from 'src/user/entities/user.entity'
+import { Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity('customers')
 export class Customer {
