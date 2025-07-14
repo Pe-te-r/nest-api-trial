@@ -25,8 +25,19 @@ export class PickStationService {
     return this.pickStationRepository.save(pickStation)
   }
 
-  findAll() {
-    return this.pickStationRepository.find({ relations: ['constituency', 'orders'] })
+  async findAll() {
+    const stations = await this.pickStationRepository.find({
+      relations: ['constituency', 'constituency.county'],
+    })
+    return stations.map(station => {
+      const { constituency, ...rest } = station
+      const { county, ...constituencyData } = constituency
+      return {
+        ...rest,
+        county,
+        constituency: constituencyData,
+      }
+    })
   }
 
   findOne(id: string) {

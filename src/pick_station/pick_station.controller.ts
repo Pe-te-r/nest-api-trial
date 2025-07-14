@@ -3,7 +3,7 @@ import { PickStationService } from './pick_station.service'
 import { CreatePickStationDto } from './dto/create-pick_station.dto'
 import { UpdatePickStationDto } from './dto/update-pick_station.dto'
 
-@Controller('pick-station')
+@Controller('pickup-stations')
 export class PickStationController {
   constructor(private readonly pickStationService: PickStationService) {}
 
@@ -19,16 +19,16 @@ export class PickStationController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.pickStationService.findOne(+id)
+    return this.pickStationService.findOne(id)
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePickStationDto: UpdatePickStationDto) {
-    return this.pickStationService.update(+id, updatePickStationDto)
+    return this.pickStationService.update(id, updatePickStationDto)
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.pickStationService.remove(+id)
+    return this.pickStationService.remove(id)
   }
 }
