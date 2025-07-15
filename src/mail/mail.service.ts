@@ -26,17 +26,17 @@ export class MailService {
       context: {
         firstName,
         joinedAt,
+        year: new Date().getFullYear(),
       },
     })
   }
 
-  async sendForgotPassword(email: string, temporaryPassword: string, firstName: string) {
+  async sendForgotPassword(email: string, firstName: string) {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Your Temporary Password',
       template: 'forgot-password', // this should match your .hbs file
       context: {
-        temporaryPassword,
         firstName,
       },
     })
@@ -49,6 +49,9 @@ export class MailService {
       template: 'password-update-success',
       context: {
         firstName: first_name,
+        siteName: 'Grocery Store',
+        domain: 'yourgrocerystore.com',
+        year: new Date().getFullYear(),
       },
     })
   }

@@ -102,6 +102,7 @@ export class AuthService {
       phone: createAuthDto.phone,
     })
     await this.userRepository.save(user)
+    await this.mailService.sendUserRegistration(createAuthDto.firstName, createAuthDto.email)
 
     return formatResponse('success', 'User created success', null)
   }
@@ -169,6 +170,7 @@ export class AuthService {
     if (await this.verifyData(data.oldPassword, user.password_hash)) {
       user.password_hash = await this.hashData(data.newPassword)
       await this.userRepository.save(user)
+      await this.mailService.updatePassword(user.email, user.first_name)
       return formatResponse('success', 'User data retrived success', null)
     } else {
       throw new UnauthorizedException('Invalid old password')
@@ -197,10 +199,6 @@ export class AuthService {
     console.log('two')
 
     const session = user_exits?.session
-    // const session = await this.sessionRepository.findOne({ where: { user: user_exits } })
-    console.log('five')
-    console.log('here1', user_exits)
-    console.log('here2', session)
     if (session) {
       const random_code = this.generateSixDigitCode()
       console.log('three')
