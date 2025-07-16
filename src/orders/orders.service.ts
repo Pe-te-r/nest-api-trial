@@ -25,7 +25,7 @@ export class OrdersService {
     private readonly storeRepository: Repository<Store>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) { }
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const customer = await this.userRepository.findOne({
@@ -58,7 +58,6 @@ export class OrdersService {
       paymentMethod: createOrderDto.payment.method,
       paymentPhone: createOrderDto.payment.phone,
       items,
-      // scheduledPickupTime: createOrderDto.delivery.scheduledPickupTime, // Uncomment if you add this to DTO/entity
     })
     await this.orderRepository.save(order)
     return formatResponse('success', 'Order created successfully', null)
@@ -135,13 +134,13 @@ export class OrdersService {
           },
         },
       },
-    });
+    })
 
     if (!order) {
-      throw new Error('Order not found');
+      throw new Error('Order not found')
     }
 
-    return formatResponse('success', 'Order retrieved successfully', order);
+    return formatResponse('success', 'Order retrieved successfully', order)
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {

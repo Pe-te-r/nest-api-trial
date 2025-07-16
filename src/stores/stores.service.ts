@@ -8,6 +8,7 @@ import { User } from 'src/user/entities/user.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { formatResponse } from 'src/types/types'
 import { UserRole } from 'src/utils/enums'
+import { OrderItem } from 'src/orders/entities/order.entity'
 
 @Injectable()
 export class StoresService {
@@ -16,6 +17,8 @@ export class StoresService {
     private readonly storeRepository: Repository<Store>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(OrderItem)
+    private readonly ordersItemsRepository: Repository<OrderItem>,
     @InjectRepository(Constituency)
     private readonly constituencyRepository: Repository<Constituency>,
   ) {}
@@ -110,6 +113,54 @@ export class StoresService {
     }
 
     return store
+  }
+  async findVendorOrders(vendorId: string) {
+    const orders = await this.ordersItemsRepository.find({
+      where: {
+        vendor: { id: vendorId },
+      },
+      relations: ['order', 'order.customer', 'product', 'vendor'],
+      select: {
+        id: true,
+        quantity: true,
+        itemStatus: true,
+        order: {
+          id: true,
+          status: true,
+          totalAmount: true,
+          created_at: true,
+          deliveryOption: true,
+          deliveryInstructions: true,
+          customer: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            phone: true,
+          },
+        },
+        product: {
+          id: true,
+          name: true,
+          price: true,
+          imageUrl: true,
+        },
+        vendor: {
+          id: true,
+          businessName: true,
+        },
+      },
+      order: {
+        order: {
+          created_at: 'DESC',
+        },
+      },
+    })
+
+    if (!orders.length) {
+      throw new NotFoundException('No orders found for this vendor')
+    }
+
+    return formatResponse('success', 'Vendor orders retrieved', orders)
   }
   async checkIfApplied(id: string) {
     const user = await this.userRepository.findOne({ where: { id }, relations: { store: true } })

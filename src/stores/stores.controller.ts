@@ -26,6 +26,11 @@ export class StoresController {
     return this.storesService.findOne(id)
   }
 
+  @Get(':id/orders')
+  findOrders(@Param('id', ParseUUIDPipe) id: string) {
+    return this.storesService.findVendorOrders(id)
+  }
+
   @Get(':id/applied')
   checkApplied(@Param('id', ParseUUIDPipe) id: string) {
     return this.storesService.checkIfApplied(id)

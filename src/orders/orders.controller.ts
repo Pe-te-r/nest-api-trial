@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { OrdersService } from './orders.service'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { UpdateOrderDto } from './dto/update-order.dto'
-import { Public } from 'src/common/decorators/public.decorator'
 
 @Controller('orders')
 export class OrdersController {
@@ -20,7 +19,6 @@ export class OrdersController {
   }
 
   @Get(':id')
-  @Public()
   findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id)
   }
