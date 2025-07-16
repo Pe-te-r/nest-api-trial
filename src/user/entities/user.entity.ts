@@ -1,6 +1,7 @@
 import { AuthSession } from 'src/auth/entities/auth.entity'
 import { Store } from 'src/stores/entities/store.entity'
 import { AccountStatus, UserRole } from 'src/utils/enums'
+import { Customer } from 'src/customers/entities/customer.entity'
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -60,4 +61,13 @@ export class User {
 
   @OneToOne(() => Store, (store) => store.user)
   store: Store
+
+  // Orders relationship via Customer
+  @OneToOne(() => Customer, (customer) => customer.user)
+  customer: Customer;
+
+  // Helper for orders through customer
+  get orders() {
+    return this.customer?.orders;
+  }
 }

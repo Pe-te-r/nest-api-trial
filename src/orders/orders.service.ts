@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto'
@@ -7,6 +7,8 @@ import { Order, OrderItem } from './entities/order.entity'
 import { Customer } from '../customers/entities/customer.entity'
 import { Store } from '../stores/entities/store.entity'
 import { Product } from '../products/entities/product.entity'
+import { formatResponse } from 'src/types/types'
+import { User } from 'src/user/entities/user.entity'
 
 @Injectable()
 export class OrdersService {
@@ -17,6 +19,8 @@ export class OrdersService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     @InjectRepository(Store)
     private readonly storeRepository: Repository<Store>,
     @InjectRepository(Product)
@@ -24,8 +28,10 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const customer = await this.customerRepository.findOne({ where: { user: { id: createOrderDto.customer_id } } })
-    if (!customer) throw new Error('Customer not found')
+    const user = await this.userRepository.findOne({ where: { id: createOrderDto.customer_id } })
+    const customer = user?.customer
+    console.log('Customer found:', customer)
+    if (!customer) throw new NotFoundException('Customer not found')
 
     // Map products to OrderItems
     const items: OrderItem[] = []
@@ -53,20 +59,24 @@ export class OrdersService {
       items,
       // scheduledPickupTime: createOrderDto.delivery.scheduledPickupTime, // Uncomment if you add this to DTO/entity
     })
-    return await this.orderRepository.save(order)
+    await this.orderRepository.save(order)
+    return formatResponse('success', 'Order created successfully', null)
   }
 
-  findAll() {
-    return this.orderRepository.find({ relations: ['customer', 'items', 'items.product', 'items.vendor'] })
+  async findAll() {
+    const orders = await this.orderRepository.find({ relations: ['customer', 'items', 'items.product', 'items.vendor'] })
+    return formatResponse('success', 'Orders retrieved successfully', orders)
   }
 
-  findOne(id: string) {
-    return this.orderRepository.findOne({ where: { id }, relations: ['customer', 'items', 'items.product', 'items.vendor'] })
+  async findOne(id: string) {
+    const order = await this.orderRepository.findOne({ where: { id }, relations: ['customer', 'items', 'items.product', 'items.vendor'] })
+    if (!order) throw new Error('Order not found')
+    return formatResponse('success', 'Order retrieved successfully', order)
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     await this.orderRepository.update(id, updateOrderDto)
-    return this.findOne(id)
+    return  this.findOne(id)
   }
 
   async remove(id: string) {
