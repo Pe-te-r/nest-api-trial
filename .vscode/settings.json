@@ -2,10 +2,10 @@
   "sqltools.connections": [
     {
       "previewLimit": 50,
-      "server": "192.168.137.40",
+      "server": "192.168.137.109",
       "port": 5432,
       "driver": "PostgreSQL",
-      "name": "pg",
+      "name": "pg_new",
       "database": "example_db",
       "username": "postgres"
     }

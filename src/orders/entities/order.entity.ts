@@ -1,7 +1,6 @@
 // src/order-items/entities/order-item.entity.ts
 import { Product } from 'src/products/entities/product.entity'
 // src/orders/entities/order.entity.ts
-import { Customer } from 'src/customers/entities/customer.entity'
 import { OrderStatus } from 'src/types/types'
 import {
   Entity,
@@ -17,14 +16,15 @@ import {
 import { Store } from 'src/stores/entities/store.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
+import { User } from 'src/user/entities/user.entity'
 
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @ManyToOne(() => Customer, (customer) => customer.orders)
-  customer: Customer
+  @ManyToOne(() => User, (user) => user.orders)
+  customer: User
 
   @ManyToOne(() => PickStation, (station) => station.orders)
   pickStation: PickStation
@@ -67,7 +67,7 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   deliveryInstructions: string
 
-  @Column({ type: 'enum', enum: ['mpesa', 'wallet'] , default: 'mpesa' })
+  @Column({ type: 'enum', enum: ['mpesa', 'wallet'], default: 'mpesa' })
   paymentMethod: 'mpesa' | 'wallet'
 
   @Column({ type: 'varchar', nullable: true })
@@ -81,7 +81,6 @@ export class Order {
     if (!this.items) return []
     return [...new Set(this.items.map((item) => item.vendor))]
   }
-
 }
 
 @Entity('order_items')

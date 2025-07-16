@@ -19,7 +19,7 @@ import { DriverModule } from './driver/driver.module'
 import { OrdersModule } from './orders/orders.module'
 import { AssignmentModule } from './assignment/assignment.module'
 import { CustomersModule } from './customers/customers.module'
-import { TransactionsModule } from './transactions/transactions.module';
+import { TransactionsModule } from './transactions/transactions.module'
 
 @Module({
   imports: [

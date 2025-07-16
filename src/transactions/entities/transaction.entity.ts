@@ -1,25 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm'
 
 @Entity('transactions')
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string
 
   @Column()
-  type: 'customer_payment' | 'payout_store' | 'payout_driver';
+  type: 'customer_payment' | 'payout_store' | 'payout_driver'
 
   @Column('decimal', { precision: 10, scale: 2 })
-  amount: number;
+  amount: number
 
   @Column({ nullable: true })
-  fromAccountId: string;
+  fromAccountId: string
 
   @Column({ nullable: true })
-  toAccountId: string;
+  toAccountId: string
 
   @Column({ nullable: true })
-  orderId: string;
+  orderId: string
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date
 }

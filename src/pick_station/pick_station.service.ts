@@ -16,7 +16,9 @@ export class PickStationService {
   ) {}
 
   async create(createPickStationDto: CreatePickStationDto) {
-    const constituency = await this.constituencyRepository.findOne({ where: { id: createPickStationDto.constituencyId } })
+    const constituency = await this.constituencyRepository.findOne({
+      where: { id: createPickStationDto.constituencyId },
+    })
     if (!constituency) throw new Error('Constituency not found')
     const pickStation = this.pickStationRepository.create({
       ...createPickStationDto,
@@ -29,7 +31,7 @@ export class PickStationService {
     const stations = await this.pickStationRepository.find({
       relations: ['constituency', 'constituency.county'],
     })
-    return stations.map(station => {
+    return stations.map((station) => {
       const { constituency, ...rest } = station
       const { county, ...constituencyData } = constituency
       return {
@@ -41,13 +43,18 @@ export class PickStationService {
   }
 
   findOne(id: string) {
-    return this.pickStationRepository.findOne({ where: { id }, relations: ['constituency', 'orders'] })
+    return this.pickStationRepository.findOne({
+      where: { id },
+      relations: ['constituency', 'orders'],
+    })
   }
 
-   findByCounty(countyId: string) {
-    return this.pickStationRepository.find({ where: { constituency: { county: { id: countyId } } }, relations: ['constituency'] })
+  findByCounty(countyId: string) {
+    return this.pickStationRepository.find({
+      where: { constituency: { county: { id: countyId } } },
+      relations: ['constituency'],
+    })
   }
-
 
   async update(id: string, updatePickStationDto: UpdatePickStationDto) {
     await this.pickStationRepository.update(id, updatePickStationDto)
