@@ -21,7 +21,7 @@ export class StoresService {
     private readonly ordersItemsRepository: Repository<OrderItem>,
     @InjectRepository(Constituency)
     private readonly constituencyRepository: Repository<Constituency>,
-  ) {}
+  ) { }
 
   async create(createStoreDto: CreateStoreDto) {
     console.log('data received', createStoreDto)
@@ -117,7 +117,7 @@ export class StoresService {
   async findVendorOrders(vendorId: string) {
     const orders = await this.ordersItemsRepository.find({
       where: {
-        vendor: { id: vendorId },
+        vendor: { user: { id: vendorId } },
       },
       relations: ['order', 'order.customer', 'product', 'vendor'],
       select: {
