@@ -21,4 +21,5 @@ export class CreateOrderDto {
   delivery: CreateOrderDeliveryDto
   payment: CreateOrderPaymentDto
   totalAmount: number
+  subCounty: string;
 }

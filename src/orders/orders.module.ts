@@ -7,9 +7,11 @@ import { Customer } from '../customers/entities/customer.entity'
 import { Store } from '../stores/entities/store.entity'
 import { Product } from '../products/entities/product.entity'
 import { User } from 'src/user/entities/user.entity'
+import { Constituency } from 'src/constituency/entities/constituency.entity'
+import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderItem, Customer, Store, User, Product])],
+  imports: [TypeOrmModule.forFeature([Order, OrderItem, Customer, Store, User, Product, Constituency, PickStation])],
   controllers: [OrdersController],
   providers: [OrdersService],
 })

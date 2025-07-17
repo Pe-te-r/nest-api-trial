@@ -9,6 +9,8 @@ import { Store } from '../stores/entities/store.entity'
 import { Product } from '../products/entities/product.entity'
 import { formatResponse } from 'src/types/types'
 import { User } from 'src/user/entities/user.entity'
+import { Constituency } from 'src/constituency/entities/constituency.entity'
+import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 
 @Injectable()
 export class OrdersService {
@@ -23,15 +25,19 @@ export class OrdersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Store)
     private readonly storeRepository: Repository<Store>,
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
+      @InjectRepository(Product)
+      private readonly productRepository: Repository<Product>,
+      @InjectRepository(Constituency)
+      private readonly constituencyRepository: Repository<Constituency>,
+      @InjectRepository(PickStation)
+      private readonly pickStationRepository: Repository<PickStation>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const customer = await this.userRepository.findOne({
       where: { id: createOrderDto.customer_id },
     })
-    console.log('User found:', customer)
+    console.log('createOrderDto found:', createOrderDto)
     if (!customer) throw new NotFoundException('Customer not found')
 
     // Map products to OrderItems
@@ -47,7 +53,15 @@ export class OrdersService {
       })
       items.push(item)
     }
-
+    let constituency: Constituency | null = null
+    let pickStation: PickStation | null = null
+    if( createOrderDto.delivery.option === 'delivery'){
+      constituency = await this.constituencyRepository.findOne({ where: { id: createOrderDto.subCounty } })
+      if(!constituency) throw new NotFoundException('Constituency not found')
+    }else if(createOrderDto.delivery.option === 'pickup'){
+      pickStation = await this.pickStationRepository.findOne({ where: { id: createOrderDto.subCounty } })
+      if(!pickStation) throw new NotFoundException('Pick station not found')
+    }
     const order = this.orderRepository.create({
       customer,
       totalAmount: createOrderDto.totalAmount,
@@ -58,6 +72,8 @@ export class OrdersService {
       paymentMethod: createOrderDto.payment.method,
       paymentPhone: createOrderDto.payment.phone,
       items,
+      constituency,
+      pickStation
     })
     await this.orderRepository.save(order)
     return formatResponse('success', 'Order created successfully', null)
@@ -84,6 +100,7 @@ export class OrdersService {
       },
       order: {
         created_at: 'DESC',
+        
       },
     })
     return formatResponse('success', 'Orders retrieved successfully', orders)
@@ -92,7 +109,14 @@ export class OrdersService {
   async findOne(id: string) {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['customer', 'items', 'items.product', 'items.vendor'],
+      relations: [
+        'customer', 
+        'items', 
+        'items.product', 
+        'items.vendor',
+        'pickStation',
+        'constituency'
+      ],
       select: {
         id: true,
         totalAmount: true,
@@ -133,14 +157,31 @@ export class OrdersService {
             approved: true,
           },
         },
+        // Just include pickStation and constituency as objects, not conditionally
+        pickStation: {
+          id: true,
+          name: true,
+          // add other fields as needed
+        },
+        constituency: {
+          id: true,
+          name: true,
+        }
       },
-    })
+    });
 
     if (!order) {
-      throw new NotFoundException('Order not found')
+      throw new NotFoundException('Order not found');
     }
 
-    return formatResponse('success', 'Order retrieved successfully', order)
+    // Now you can shape the response as you want
+    const result = {
+      ...order,
+      pickupDetails: order.deliveryOption === 'pickup' ? order.pickStation : null,
+      deliveryDetails: order.deliveryOption === 'delivery' ? order.constituency : null
+    };
+
+    return formatResponse('success', 'Order retrieved successfully', result);
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {

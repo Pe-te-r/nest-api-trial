@@ -17,6 +17,7 @@ import { Store } from 'src/stores/entities/store.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { User } from 'src/user/entities/user.entity'
+import { Constituency } from 'src/constituency/entities/constituency.entity'
 
 @Entity('orders')
 export class Order {
@@ -26,8 +27,11 @@ export class Order {
   @ManyToOne(() => User, (user) => user.orders)
   customer: User
 
-  @ManyToOne(() => PickStation, (station) => station.orders)
-  pickStation: PickStation
+  @ManyToOne(() => Constituency, (constituency) => constituency.orders, { nullable: true })
+  constituency: Constituency | null
+
+  @ManyToOne(() => PickStation, (station) => station.orders, { nullable: true })
+  pickStation: PickStation | null
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   totalAmount: number

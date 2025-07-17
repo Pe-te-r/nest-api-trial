@@ -119,7 +119,14 @@ export class StoresService {
       where: {
         vendor: { user: { id: vendorId } },
       },
-      relations: ['order', 'order.customer', 'product', 'vendor'],
+      relations: [
+        'order',
+        'order.customer',
+        'order.pickStation',
+        'order.constituency',
+        'product',
+        'vendor'
+      ],
       select: {
         id: true,
         quantity: true,
@@ -135,8 +142,19 @@ export class StoresService {
             id: true,
             first_name: true,
             last_name: true,
-            phone: true,
           },
+          pickStation: {
+            id: true,
+            name: true,
+            constituency:{
+              name:true,
+            }
+
+          },
+          constituency: {
+            id: true,
+            name: true,
+          }
         },
         product: {
           id: true,
@@ -153,16 +171,26 @@ export class StoresService {
         order: {
           created_at: 'DESC',
         },
-        
       },
-    })
+    });
 
     if (!orders.length) {
-      throw new NotFoundException('No orders found for this vendor')
+      throw new NotFoundException('No orders found for this vendor');
     }
 
-    return formatResponse('success', 'Vendor orders retrieved', orders)
+    // Optionally, shape the response to show only the relevant location
+    const result = orders.map(item => ({
+      ...item,
+      deliveryLocation:
+        item.order.deliveryOption === 'pickup'
+          ? item.order.pickStation
+          : item.order.constituency,
+      deliveryType: item.order.deliveryOption,
+    }));
+
+    return formatResponse('success', 'Vendor orders retrieved', result);
   }
+  
   async checkIfApplied(id: string) {
     const user = await this.userRepository.findOne({ where: { id }, relations: { store: true } })
     if (!user) throw new NotFoundException('These user not found')
