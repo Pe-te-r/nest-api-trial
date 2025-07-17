@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { CreateOrderDto } from './dto/create-order.dto'
-import { UpdateOrderDto } from './dto/update-order.dto'
+import { UpdateOrderDto, UpdateOrderItemDto } from './dto/update-order.dto'
 import { Order, OrderItem } from './entities/order.entity'
 import { Customer } from '../customers/entities/customer.entity'
 import { Store } from '../stores/entities/store.entity'
@@ -137,7 +137,7 @@ export class OrdersService {
     })
 
     if (!order) {
-      throw new Error('Order not found')
+      throw new NotFoundException('Order not found')
     }
 
     return formatResponse('success', 'Order retrieved successfully', order)
@@ -148,8 +148,15 @@ export class OrdersService {
     return this.findOne(id)
   }
 
+    async updateStatusItem(id: string, updateOrderDto: UpdateOrderItemDto) {
+    const item = await this.orderItemRepository.findOne({ where: { id } })
+    if (!item) throw new NotFoundException('Item not found')
+    await this.orderItemRepository.update(id, { itemStatus: updateOrderDto.itemStatus })
+    return formatResponse('success', 'Item status updated successfully', item)
+  }
+
   async remove(id: string) {
     await this.orderRepository.delete(id)
-    return { deleted: true }
+    return formatResponse('success', 'Order deleted successfully', null)  
   }
 }

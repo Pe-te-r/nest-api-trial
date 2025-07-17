@@ -110,11 +110,9 @@ export enum AssignmentStatus {
 
 export enum OrderStatus {
   PENDING = 'pending',
-  PROCESSING = 'processing',
-  ASSEMBLING = 'assembling',
   READY_FOR_PICKUP = 'ready_for_pickup',
   IN_TRANSIT = 'in_transit',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
-  FAILED = 'failed',
+  REJECTED = 'rejected',
 }

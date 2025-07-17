@@ -1,3 +1,3 @@
 @url = http://localhost:4001/orders
 
-GET {{url}}/20c6f95c-7c22-4c94-8e23-36ef01e3a1b7
+GET {{url}}/item/ecc5975c-4e5e-4618-ad48-905456f15cc5
