@@ -19,8 +19,9 @@ export class OrdersController {
   }
 
   // get a specific order item details by id
-  @Patch('item/:id')
+  @Patch('items/:id')
   updateStatusItem(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderItemDto) {
+    console.log('Updating order item status with DTO:', updateOrderDto)
     return this.ordersService.updateStatusItem(id, updateOrderDto)
   }
 

@@ -162,10 +162,6 @@ export class StoresService {
           price: true,
           imageUrl: true,
         },
-        vendor: {
-          id: true,
-          businessName: true,
-        },
       },
       order: {
         order: {
@@ -190,7 +186,7 @@ export class StoresService {
 
     return formatResponse('success', 'Vendor orders retrieved', result);
   }
-  
+
   async checkIfApplied(id: string) {
     const user = await this.userRepository.findOne({ where: { id }, relations: { store: true } })
     if (!user) throw new NotFoundException('These user not found')
