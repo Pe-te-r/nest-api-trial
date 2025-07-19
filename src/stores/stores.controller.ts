@@ -14,7 +14,6 @@ export class StoresController {
   }
 
   @Get()
-  @Public()
   findAll() {
     return this.storesService.findAll()
   }
@@ -24,14 +23,11 @@ export class StoresController {
   }
 
   @Get(':id')
-  @Public()
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.storesService.findOne(id)
   }
 
   @Get(':id/orders')
-  @Public()
-
   findOrders(@Param('id', ParseUUIDPipe) id: string) {
     return this.storesService.findVendorOrders(id)
   }

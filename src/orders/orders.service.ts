@@ -111,85 +111,144 @@ export class OrdersService {
     })
     return formatResponse('success', 'Orders retrieved successfully', orders)
   }
-
-  async findOne(id: string) {
+  async findOne(id: string, viewType: 'admin' | 'customer' = 'admin') {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: [
-        'customer', 
-        'items', 
-        'items.product', 
+        'customer',
+        'items',
+        'items.product',
         'items.vendor',
+        'items.vendor.constituency',
+        'items.vendor.constituency.county',
         'pickStation',
-        'constituency'
+        'pickStation.constituency',
+        'pickStation.constituency.county',
+        'constituency',
+        'constituency.county',
+        'items.assignment',
+        'items.assignment.driver',
+        'items.assignment.driver.user'
       ],
-      select: {
-        id: true,
-        totalAmount: true,
-        status: true,
-        specialInstructions: true,
-        deliveryOption: true,
-        deliveryFee: true,
-        deliveryInstructions: true,
-        paymentMethod: true,
-        paymentPhone: true,
-        created_at: true,
-        updated_at: true,
-        customer: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          email: true,
-          phone: true,
-          account_status: true,
-        },
-        items: {
-          id: true,
-          quantity: true,
-          itemStatus: true,
-          product: {
-            id: true,
-            name: true,
-            price: true,
-            imageUrl: true,
-            description: true,
-            isAvailable: true,
-          },
-          vendor: {
-            id: true,
-            businessName: true,
-            businessContact: true,
-            streetAddress: true,
-            approved: true,
-          },
-        },
-        // Just include pickStation and constituency as objects, not conditionally
-        pickStation: {
-          id: true,
-          name: true,
-          // add other fields as needed
-        },
-        constituency: {
-          id: true,
-          name: true,
-        }
-      },
     });
-
+  
     if (!order) {
       throw new NotFoundException('Order not found');
     }
-
-    // Now you can shape the response as you want
-    const result = {
-      ...order,
-      pickupDetails: order.deliveryOption === 'pickup' ? order.pickStation : null,
-      deliveryDetails: order.deliveryOption === 'delivery' ? order.constituency : null
+  
+    // Base response structure
+    const baseResponse = {
+      id: order.id,
+      status: order.status,
+      totalAmount: order.totalAmount,
+      deliveryOption: order.deliveryOption,
+      deliveryFee: order.deliveryFee,
+      deliveryInstructions: order.deliveryInstructions,
+      paymentMethod: order.paymentMethod,
+      paymentPhone: order.paymentPhone,
+      specialInstructions: order.specialInstructions,
+      createdAt: order.created_at,
+      updatedAt: order.updated_at,
+      itemCount: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
     };
-
-    return formatResponse('success', 'Order retrieved successfully', result);
+  
+    // Enhanced location details
+    const locationDetails = {
+      pickupDetails: order.deliveryOption === 'pickup' && order.pickStation ? {
+        id: order.pickStation.id,
+        name: order.pickStation.name,
+        contactPhone: order.pickStation.contactPhone,
+        openingHours: `${order.pickStation.openingTime} - ${order.pickStation.closingTime}`,
+        constituency: order.pickStation.constituency?.name,
+        county: order.pickStation.constituency?.county?.county_name,
+        fullAddress: [
+          order.pickStation.name,
+          order.pickStation.constituency?.name,
+          order.pickStation.constituency?.county?.county_name
+        ].filter(Boolean).join(', ')
+      } : null,
+      deliveryDetails: order.deliveryOption === 'delivery' && order.constituency ? {
+        constituency: order.constituency.name,
+        county: order.constituency.county?.county_name,
+        fullAddress: [
+          order.constituency.name,
+          order.constituency.county?.county_name
+        ].filter(Boolean).join(', ')
+      } : null
+    };
+  
+    if (viewType === 'admin') {
+      // Admin view - full details
+      const adminResponse = {
+        ...baseResponse,
+        ...locationDetails,
+        customer: {
+          id: order.customer?.id,
+          name: `${order.customer?.first_name} ${order.customer?.last_name}`,
+          email: order.customer?.email,
+          phone: order.customer?.phone,
+          accountStatus: order.customer?.account_status
+        },
+        items: order.items?.map(item => ({
+          id: item.id,
+          product: {
+            id: item.product?.id,
+            name: item.product?.name,
+            price: item.product?.price,
+            imageUrl: item.product?.imageUrl,
+            description: item.product?.description
+          },
+          vendor: {
+            id: item.vendor?.id,
+            businessName: item.vendor?.businessName,
+            contact: item.vendor?.businessContact,
+            address: item.vendor?.streetAddress,
+            location: item.vendor?.constituency ? {
+              constituency: item.vendor.constituency.name,
+              county: item.vendor.constituency.county?.county_name
+            } : null
+          },
+          quantity: item.quantity,
+          status: item.itemStatus,
+          assignedDriver: item.assignment?.driver ? {
+            id: item.assignment.driver.id,
+            name: `${item.assignment.driver.user.first_name} ${item.assignment.driver.user.last_name}`,
+            phone: item.assignment.driver.user.phone,
+            vehicleType: item.assignment.driver.vehicle_type,
+            licensePlate: item.assignment.driver.license_plate,
+            assignmentStatus: item.assignment.status
+          } : null
+        })) || []
+      };
+      return formatResponse('success', 'Order details retrieved', adminResponse);
+    } else {
+      // Customer view - limited details
+      const customerResponse = {
+        ...baseResponse,
+        ...locationDetails,
+        customer: {
+          name: `${order.customer?.first_name} ${order.customer?.last_name}`
+        },
+        items: order.items?.map(item => ({
+          id: item.id,
+          product: {
+            name: item.product?.name,
+            price: item.product?.price,
+            imageUrl: item.product?.imageUrl
+          },
+          quantity: item.quantity,
+          status: item.itemStatus,
+          estimatedDelivery: item.itemStatus === 'in_transit' ? 
+            new Date(item.order.created_at.getTime() + 2*60*60*1000).toISOString() : null
+        })) || [],
+        supportContact: {
+          phone: '+254712345678',
+          email: 'support@example.com'
+        }
+      };
+      return formatResponse('success', 'Order details retrieved', customerResponse);
+    }
   }
-
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     await this.orderRepository.update(id, updateOrderDto)
     return this.findOne(id)

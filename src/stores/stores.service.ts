@@ -102,6 +102,7 @@ export class StoresService {
 
     return formatResponse('success', 'Shops retrieved successfully', formattedShops)
   }
+
   async findOne(id: string): Promise<Store> {
     const store = await this.storeRepository.findOne({
       where: { id },
@@ -114,6 +115,7 @@ export class StoresService {
 
     return store
   }
+  
   async findVendorOrders(vendorId: string) {
     const orders = await this.ordersItemsRepository.find({
       where: {
@@ -123,7 +125,10 @@ export class StoresService {
         'order',
         'order.customer',
         'order.pickStation',
+        'order.pickStation.constituency',
+        'order.pickStation.constituency.county',
         'order.constituency',
+        'order.constituency.county',
         'product',
         'vendor'
       ],
@@ -146,19 +151,22 @@ export class StoresService {
           pickStation: {
             id: true,
             name: true,
-            constituency:{
-              name:true,
-              county:{
-                county_name:true,
+            contactPhone: true,
+            constituency: {
+              id: true,
+              name: true,
+              county: {
+                id: true,
+                county_name: true,
               }
             }
-
           },
           constituency: {
             id: true,
             name: true,
-            county:{
-              county_name:true,
+            county: {
+              id: true,
+              county_name: true,
             }
           }
         },
@@ -175,45 +183,62 @@ export class StoresService {
         },
       },
     });
-
+    
     if (!orders.length) {
       throw new NotFoundException('No orders found for this vendor');
     }
-
     
-
-    // Optionally, shape the response to show only the relevant location
+    // Transform the response to include proper location information
     const result = orders.map(item => {
       const isPickup = item.order.deliveryOption === 'pickup';
-    
-      const deliveryLocation = isPickup
+      
+      const locationInfo = isPickup
         ? {
-            name: item?.order?.pickStation?.name,
-            constituency: {
-              name: item?.order?.pickStation?.constituency?.name,
-              county: {
-                county_name: item?.order?.pickStation?.constituency?.county?.county_name,
-              },
+            type: 'pickup',
+            station: {
+              id: item.order.pickStation?.id,
+              name: item.order.pickStation?.name,
+              contactPhone: item.order.pickStation?.contactPhone,
             },
+            constituency: {
+              id: item.order.pickStation?.constituency?.id,
+              name: item.order.pickStation?.constituency?.name,
+            },
+            county: {
+              id: item.order.pickStation?.constituency?.county?.id,
+              name: item.order.pickStation?.constituency?.county?.county_name,
+            }
           }
         : {
-            name: item?.order?.constituency?.name,
+            type: 'delivery',
             constituency: {
-              name: item?.order?.constituency?.name,
-              county: {
-                county_name: item?.order?.constituency?.county?.county_name,
-              },
+              id: item.order.constituency?.id,
+              name: item.order.constituency?.name,
             },
+            county: {
+              id: item.order.constituency?.county?.id,
+              name: item.order.constituency?.county?.county_name,
+            }
           };
     
       return {
-        ...item,
-        deliveryLocation,
-        deliveryType: item.order.deliveryOption,
+        id: item.id,
+        quantity: item.quantity,
+        status: item.itemStatus,
+        product: item.product,
+        order: {
+          id: item.order.id,
+          status: item.order.status,
+          totalAmount: item.order.totalAmount,
+          createdAt: item.order.created_at,
+          customer: item.order.customer,
+          deliveryOption: item.order.deliveryOption,
+          deliveryInstructions: item.order.deliveryInstructions,
+          location: locationInfo
+        }
       };
     });
     
-
     return formatResponse('success', 'Vendor orders retrieved', result);
   }
 

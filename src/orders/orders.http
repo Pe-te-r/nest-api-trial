@@ -1,3 +1,15 @@
 @url = http://localhost:4001/orders
 
 GET {{url}}/item/ecc5975c-4e5e-4618-ad48-905456f15cc5
+
+### Get all orders
+GET {{url}}
+
+### Get order by id
+GET {{url}}/cf2f2851-40c8-4b83-905d-3ed94c4c12f7
+
+### Get order by id
+GET {{url}}/ddd27e45-aaae-4b50-b025-5651b7ffa0b6
+
+### Get order by id
+GET {{url}}/bfe94b6a-a73a-41f7-985e-4d9511b40ee7
