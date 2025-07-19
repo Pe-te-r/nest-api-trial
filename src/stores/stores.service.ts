@@ -148,12 +148,18 @@ export class StoresService {
             name: true,
             constituency:{
               name:true,
+              county:{
+                county_name:true,
+              }
             }
 
           },
           constituency: {
             id: true,
             name: true,
+            county:{
+              county_name:true,
+            }
           }
         },
         product: {
@@ -174,15 +180,39 @@ export class StoresService {
       throw new NotFoundException('No orders found for this vendor');
     }
 
+    
+
     // Optionally, shape the response to show only the relevant location
-    const result = orders.map(item => ({
-      ...item,
-      deliveryLocation:
-        item.order.deliveryOption === 'pickup'
-          ? item.order.pickStation
-          : item.order.constituency,
-      deliveryType: item.order.deliveryOption,
-    }));
+    const result = orders.map(item => {
+      const isPickup = item.order.deliveryOption === 'pickup';
+    
+      const deliveryLocation = isPickup
+        ? {
+            name: item?.order?.pickStation?.name,
+            constituency: {
+              name: item?.order?.pickStation?.constituency?.name,
+              county: {
+                county_name: item?.order?.pickStation?.constituency?.county?.county_name,
+              },
+            },
+          }
+        : {
+            name: item?.order?.constituency?.name,
+            constituency: {
+              name: item?.order?.constituency?.name,
+              county: {
+                county_name: item?.order?.constituency?.county?.county_name,
+              },
+            },
+          };
+    
+      return {
+        ...item,
+        deliveryLocation,
+        deliveryType: item.order.deliveryOption,
+      };
+    });
+    
 
     return formatResponse('success', 'Vendor orders retrieved', result);
   }

@@ -1,0 +1,7 @@
+@url=http://192.168.0.101:4001
+
+### Get all stores
+GET {{url}}/stores
+
+### Get store by id
+GET {{url}}/stores/64753752-87f9-4dc3-964c-e6bed8e1658f/orders
