@@ -21,9 +21,6 @@ export class Driver {
   @JoinColumn({ name: 'user_id' })
   user: User
 
-  @Column({ type: 'varchar', length: 50, default: 'zone_1' })
-  current_zone: string
-
   @Column({ type: 'enum', enum: DriverStatus, default: DriverStatus.OFFLINE })
   status: DriverStatus
 

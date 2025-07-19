@@ -9,9 +9,11 @@ import { Product } from '../products/entities/product.entity'
 import { User } from 'src/user/entities/user.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
+import { Assignment } from 'src/assignment/entities/assignment.entity'
+import { Driver } from 'src/driver/entities/driver.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderItem, Customer, Store, User, Product, Constituency, PickStation])],
+  imports: [TypeOrmModule.forFeature([Order, OrderItem, Customer, Store, User, Product, Constituency, PickStation, Assignment, Driver])],
   controllers: [OrdersController],
   providers: [OrdersService],
 })

@@ -7,10 +7,12 @@ import { Order, OrderItem } from './entities/order.entity'
 import { Customer } from '../customers/entities/customer.entity'
 import { Store } from '../stores/entities/store.entity'
 import { Product } from '../products/entities/product.entity'
-import { formatResponse } from 'src/types/types'
+import { AssignmentStatus, DriverStatus, formatResponse, OrderStatus } from 'src/types/types'
 import { User } from 'src/user/entities/user.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
+import { Assignment } from 'src/assignment/entities/assignment.entity'
+import { Driver } from 'src/driver/entities/driver.entity'
 
 @Injectable()
 export class OrdersService {
@@ -25,12 +27,16 @@ export class OrdersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Store)
     private readonly storeRepository: Repository<Store>,
-      @InjectRepository(Product)
-      private readonly productRepository: Repository<Product>,
-      @InjectRepository(Constituency)
-      private readonly constituencyRepository: Repository<Constituency>,
-      @InjectRepository(PickStation)
-      private readonly pickStationRepository: Repository<PickStation>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+    @InjectRepository(Constituency)
+    private readonly constituencyRepository: Repository<Constituency>,
+    @InjectRepository(PickStation)
+    private readonly pickStationRepository: Repository<PickStation>,
+    @InjectRepository(Assignment)
+    private readonly assignmentRepository: Repository<Assignment>,
+    @InjectRepository(Driver)
+    private readonly driverRepository: Repository<Driver>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -192,6 +198,19 @@ export class OrdersService {
     async updateStatusItem(id: string, updateOrderDto: UpdateOrderItemDto) {
     const item = await this.orderItemRepository.findOne({ where: { id } })
     if (!item) throw new NotFoundException('Item not found')
+    if(updateOrderDto.itemStatus === OrderStatus.READY_FOR_PICKUP){
+      // i want to get a driver that is available and assign the order to them
+      const driver = await this.driverRepository.findOne({ where: { status: DriverStatus.AVAILABLE } })
+      if(!driver) throw new NotFoundException('No driver available')
+      const assignment = this.assignmentRepository.create({
+        orderItem: item,
+        driver,
+      })
+      // make driver status unavailable
+      await this.driverRepository.update(driver.id, { status: DriverStatus.AVAILABLE })
+      await this.assignmentRepository.save(assignment)
+    }
+    
     await this.orderItemRepository.update(id, { itemStatus: updateOrderDto.itemStatus })
     return formatResponse('success', 'Item status updated successfully', item)
   }
