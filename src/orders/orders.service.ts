@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { UpdateOrderDto, UpdateOrderItemDto } from './dto/update-order.dto'
 import { Order, OrderItem } from './entities/order.entity'
@@ -13,6 +13,7 @@ import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { Driver } from 'src/driver/entities/driver.entity'
+import { Connection } from 'typeorm'
 
 @Injectable()
 export class OrdersService {
@@ -37,27 +38,46 @@ export class OrdersService {
     private readonly assignmentRepository: Repository<Assignment>,
     @InjectRepository(Driver)
     private readonly driverRepository: Repository<Driver>,
+    private readonly connection: Connection,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const customer = await this.userRepository.findOne({
       where: { id: createOrderDto.customer_id },
-    })
-    console.log('createOrderDto found:', createOrderDto)
-    if (!customer) throw new NotFoundException('Customer not found')
-
-    // Map products to OrderItems
-    const items: OrderItem[] = []
+    });
+    if (!customer) throw new NotFoundException('Customer not found');
+  
+    const items: OrderItem[] = [];
     for (const prod of createOrderDto.products) {
-      const product = await this.productRepository.findOne({ where: { id: prod.item_id } })
-      const vendor = await this.storeRepository.findOne({ where: { id: prod.store_id } })
-      if (!product || !vendor) throw new Error('Product or Store not found')
+      const product = await this.productRepository.findOne({ 
+        where: { id: prod.item_id },
+        relations: ['store']
+      });
+      const vendor = await this.storeRepository.findOne({ 
+        where: { id: prod.store_id },
+        relations: ['constituency.county']
+      });
+      
+      if (!product || !vendor) throw new Error('Product or Store not found');
+      
+      // Check stock and reduce quantity
+      if (product.stock < prod.quantity) {
+        throw new BadRequestException(`Not enough stock for ${product.name}`);
+      }
+      await this.productRepository.decrement(
+        { id: product.id },
+        'stock',
+        prod.quantity
+      );
+  
+      // Create item with batch group
       const item = this.orderItemRepository.create({
         product,
         vendor,
         quantity: prod.quantity,
-      })
-      items.push(item)
+        batchGroupId: `${vendor.id}-${vendor.constituency.county.id}`
+      });
+      items.push(item);
     }
     let constituency: Constituency | null = null
     let pickStation: PickStation | null = null
@@ -255,27 +275,81 @@ export class OrdersService {
   }
 
     async updateStatusItem(id: string, updateOrderDto: UpdateOrderItemDto) {
-    const item = await this.orderItemRepository.findOne({ where: { id } })
-    if (!item) throw new NotFoundException('Item not found')
-    if(updateOrderDto.itemStatus === OrderStatus.READY_FOR_PICKUP){
-      // i want to get a driver that is available and assign the order to them
-      const driver = await this.driverRepository.findOne({ where: { status: DriverStatus.AVAILABLE } })
-      if(!driver) throw new NotFoundException('No driver available')
-      const assignment = this.assignmentRepository.create({
-        orderItem: item,
-        driver,
-      })
-      // make driver status unavailable
-      await this.driverRepository.update(driver.id, { status: DriverStatus.AVAILABLE })
-      await this.assignmentRepository.save(assignment)
-    }
+      const item = await this.orderItemRepository.findOne({ where: { id } });
+      if (!item) throw new NotFoundException('Item not found');
     
-    await this.orderItemRepository.update(id, { itemStatus: updateOrderDto.itemStatus })
-    return formatResponse('success', 'Item status updated successfully', item)
+      await this.orderItemRepository.update(id, { 
+        itemStatus: updateOrderDto.itemStatus,
+      });
+    
+      // Check if batch is ready
+      if (updateOrderDto.itemStatus === OrderStatus.READY_FOR_PICKUP && item.batchGroupId) {
+        await this.checkBatchReadiness(item.batchGroupId);
+      }
+  
+    
+      return formatResponse('success', 'Item status updated successfully', null);
   }
 
   async remove(id: string) {
     await this.orderRepository.delete(id)
     return formatResponse('success', 'Order deleted successfully', null)  
   }
+
+  private async checkBatchReadiness(batchGroupId: string) {
+    // Get all items in this batch
+    const batchItems = await this.orderItemRepository.find({
+      where: { batchGroupId },
+      relations: ['vendor.constituency.county']
+    });
+
+    // Check if all items in batch are ready
+    const allReady = batchItems.every(
+      item => item.itemStatus === OrderStatus.READY_FOR_PICKUP
+    );
+
+    if (allReady) {
+      await this.assignDriverToBatch(batchGroupId);
+    }
+  }
+
+  private async assignDriverToBatch(batchGroupId: string) {
+    const [vendorId, countyId] = batchGroupId.split('-');
+    
+    // 1. Find available driver
+    const driver = await this.driverRepository.findOne({ where: { status: DriverStatus.AVAILABLE } });
+    if (!driver) {
+      throw new NotFoundException('No available drivers in this county');
+    }
+
+    // 2. Get all items in batch
+    const batchItems = await this.orderItemRepository.find({
+      where: { batchGroupId }
+    });
+
+    // 3. Create assignments for each item
+    const assignments = await this.connection.transaction(async manager => {
+      const assignmentRepo = manager.getRepository(Assignment);
+      
+      const createdAssignments = await Promise.all(
+        batchItems.map(item => 
+          assignmentRepo.save(
+            assignmentRepo.create({
+              driver,
+              orderItem: item,
+              status: AssignmentStatus.ACCEPTED
+            })
+          )
+        )
+      );
+      })
+
+    // 4. Update all items to ready for pickup
+    // await this.orderItemRepository.update(
+    //   { id: In(batchItems.map(i => i.id)) },
+    //   { itemStatus: OrderStatus.READY_FOR_PICKUP }
+    // );
+
+  } 
+
 }

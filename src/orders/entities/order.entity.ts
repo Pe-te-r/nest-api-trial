@@ -46,7 +46,7 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   specialInstructions: string
 
-  @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
+  @OneToMany(() => OrderItem, (item) => item.order, { cascade: true})
   items: OrderItem[]
 
   @CreateDateColumn({
@@ -99,6 +99,9 @@ export class OrderItem {
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product
+
+  @Column({ type: 'varchar', nullable: true })
+  batchGroupId: string
 
   @ManyToOne(() => Store)
   @JoinColumn({ name: 'vendor_id' })
