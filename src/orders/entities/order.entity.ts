@@ -104,7 +104,7 @@ export class OrderItem {
   batchGroupId: string
 
   // random code for each order item
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   randomCode: string
 
   @ManyToOne(() => Store)
