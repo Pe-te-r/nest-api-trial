@@ -136,6 +136,7 @@ export class StoresService {
         id: true,
         quantity: true,
         itemStatus: true,
+        randomCode: true,
         order: {
           id: true,
           status: true,
@@ -225,6 +226,7 @@ export class StoresService {
         id: item.id,
         quantity: item.quantity,
         status: item.itemStatus,
+        randomCode: item.randomCode,
         product: item.product,
         order: {
           id: item.order.id,

@@ -28,6 +28,7 @@ export class StoresController {
   }
 
   @Get(':id/orders')
+  @Public()
   findOrders(@Param('id', ParseUUIDPipe) id: string) {
     return this.storesService.findVendorOrders(id)
   }

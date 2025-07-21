@@ -103,6 +103,10 @@ export class OrderItem {
   @Column({ type: 'varchar', nullable: true })
   batchGroupId: string
 
+  // random code for each order item
+  @Column({ type: 'varchar' })
+  randomCode: string
+
   @ManyToOne(() => Store)
   @JoinColumn({ name: 'vendor_id' })
   vendor: Store

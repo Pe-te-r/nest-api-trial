@@ -13,7 +13,7 @@ import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { Driver } from 'src/driver/entities/driver.entity'
-import { Connection } from 'typeorm'
+import { DataSource } from 'typeorm'
 
 @Injectable()
 export class OrdersService {
@@ -38,9 +38,15 @@ export class OrdersService {
     private readonly assignmentRepository: Repository<Assignment>,
     @InjectRepository(Driver)
     private readonly driverRepository: Repository<Driver>,
-    private readonly connection: Connection,
+    private readonly dataSource: DataSource,
   ) {}
 
+  async addCodeToOrder(batchGroupId: string) {
+    const batchItems = await this.orderItemRepository.find({ where: { batchGroupId } });
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    await this.orderItemRepository.update(batchItems.map(item => item.id), { randomCode: code });
+  }
+  
   async create(createOrderDto: CreateOrderDto) {
     const customer = await this.userRepository.findOne({
       where: { id: createOrderDto.customer_id },
@@ -101,7 +107,15 @@ export class OrdersService {
       constituency,
       pickStation
     })
-    await this.orderRepository.save(order)
+    await this.orderRepository.save(order);
+
+    // Get all unique batchGroupIds from the items
+    const uniqueBatchGroupIds = [...new Set(items.map(item => item.batchGroupId))];
+
+    // For each batchGroupId, assign a random code to all items in that group
+    for (const batchGroupId of uniqueBatchGroupIds) {
+      await this.addCodeToOrder(batchGroupId);
+    }
     return formatResponse('success', 'Order created successfully', null)
   }
 
@@ -328,7 +342,7 @@ export class OrdersService {
     });
 
     // 3. Create assignments for each item
-    const assignments = await this.connection.transaction(async manager => {
+    const assignments = await this.dataSource.transaction(async manager => {
       const assignmentRepo = manager.getRepository(Assignment);
       
       const createdAssignments = await Promise.all(
