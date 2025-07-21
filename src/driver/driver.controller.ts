@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { DriverService } from './driver.service'
 import { CreateDriverDto } from './dto/create-driver.dto'
 import { UpdateDriverDto } from './dto/update-driver.dto'
+import { Public } from 'src/common/decorators/public.decorator'
 
 @Controller('driver')
 export class DriverController {
@@ -12,6 +13,7 @@ export class DriverController {
     return this.driverService.create(createDriverDto)
   }
 
+  @Public()
   @Get()
   findAll() {
     return this.driverService.findAll()
@@ -23,6 +25,7 @@ export class DriverController {
   }
 
   @Get(':id/orders')
+  @Public()
   findDriverOrders(@Param('id') id: string) {
     return this.driverService.findDriverOrders(id)
   }
