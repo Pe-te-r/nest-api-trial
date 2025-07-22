@@ -47,6 +47,8 @@ export class CustomersService {
           'items.vendor',
           'items.vendor.constituency',
           'pickStation',
+          'pickStation.constituency',
+          'pickStation.constituency.county',
           'constituency',
         ],
         order: {
@@ -54,37 +56,54 @@ export class CustomersService {
         },
       })
 
-      const formattedOrders = orders.map((order) => ({
-        id: order.id,
-        status: order.status,
-        totalAmount: order.totalAmount,
-        deliveryOption: order.deliveryOption,
-        deliveryFee: order.deliveryFee,
-        deliveryInstructions: order.deliveryInstructions,
-        paymentMethod: order.paymentMethod,
-        paymentPhone: order.paymentPhone,
-        createdAt: order.created_at,
-        pickStation: order.pickStation ?? null,
-        constituency: order.constituency ?? null,
-        itemCount: order.itemCount,
-        items: order.items.map((item) => ({
-          id: item.id,
-          quantity: item.quantity,
-          itemStatus: item.itemStatus,
-          product: {
-            id: item.product.id,
-            name: item.product.name,
-            price: item.product.price,
-          },
-          vendor: {
-            id: item.vendor.id,
-            businessName: item.vendor.businessName,
-            location: item.vendor.constituency?.name ?? 'N/A',
-          },
-          randomCode: item.randomCode,
-        })),
-      }))
-
+      const formattedOrders = orders.map((order) => {
+        const pickStation = order.pickStation;
+      
+        const pickUpLocation = pickStation
+          ? {
+              id: pickStation.id,
+              name: pickStation.name,
+              contactPhone: pickStation.contactPhone,
+              openingTime: pickStation.openingTime,
+              closingTime: pickStation.closingTime,
+              isOpenNow: pickStation.isOpenNow(), // invokes the method
+              constituency: pickStation.constituency?.name ?? 'N/A',
+              country: pickStation.constituency?.county.county_name ?? 'N/A',
+            }
+          : null;
+      
+        return {
+          id: order.id,
+          status: order.status,
+          totalAmount: order.totalAmount,
+          deliveryOption: order.deliveryOption,
+          deliveryFee: order.deliveryFee,
+          deliveryInstructions: order.deliveryInstructions,
+          paymentMethod: order.paymentMethod,
+          paymentPhone: order.paymentPhone,
+          createdAt: order.created_at,
+          itemCount: order.itemCount,
+          pickUpLocation, // ✅ now included
+          constituency: order.constituency ?? null,
+          items: order.items.map((item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            itemStatus: item.itemStatus,
+            product: {
+              id: item.product.id,
+              name: item.product.name,
+              price: item.product.price,
+            },
+            vendor: {
+              id: item.vendor.id,
+              businessName: item.vendor.businessName,
+              location: item.vendor.constituency?.name ?? 'N/A',
+            },
+            randomCode: item.randomCode,
+          })),
+        };
+      });
+      
       return this.formatResponse('success', 'Orders fetched successfully', formattedOrders)
     } catch (error) {
       return this.formatResponse('error', 'An error occurred while fetching orders', null)
