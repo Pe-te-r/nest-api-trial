@@ -414,9 +414,26 @@ export class UserService {
         throw new NotFoundException('no vendor details found')
       }
       return formatResponse('success', 'vendor found', vendors)
-    }
-    return {
-      message: `This action returns all user`,
+    }else if (query.superadmin === 'true') {
+      const superadmins = await this.userRepository.find({
+        where: {
+          role: UserRole.SUPERADMIN,
+        },
+        select: [
+          'email',
+          'first_name',
+          'last_name',
+          'account_status',
+          'created_at',
+          'id',
+          'is_verified',
+          'phone',
+        ],
+      })
+      if (!superadmins) {
+        throw new NotFoundException('no superadmin details found')
+      }
+      return formatResponse('success', 'superadmins found', superadmins)
     }
   }
 
@@ -498,6 +515,14 @@ export class UserService {
     }
     if (updateUserDto.phone) {
       user.phone = updateUserDto.phone
+    }
+
+    if(updateUserDto.role) {
+      if (Object.values(UserRole).includes(updateUserDto.role)) {
+        user.role = updateUserDto.role
+      } else {
+        throw new NotFoundException(`Invalid role: ${updateUserDto.role}`)
+      }
     }
 
     // Save to database

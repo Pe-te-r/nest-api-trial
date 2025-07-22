@@ -22,6 +22,7 @@ export class UserController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string, @Query() query: userIdQueryType) {
     console.log('query', query)
     return this.userService.findOne(id, query)
