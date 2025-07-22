@@ -24,9 +24,14 @@ export class CustomersController {
   }
 
   @Get(':id/orders')
-  @Public()
   findOrders(@Param('id') id: string) {
     return this.customersService.findOrders(id)
+  }
+
+  @Get(':id/dashboard')
+  @Public()
+  findDashboardStat(@Param('id') id: string) {
+    return this.customersService.findDashboardStat(id)
   }
 
   @Patch(':id')

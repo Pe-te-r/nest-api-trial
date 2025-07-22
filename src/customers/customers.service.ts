@@ -5,7 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Customer } from './entities/customer.entity'
 import { User } from 'src/user/entities/user.entity'
-import { Order } from 'src/orders/entities/order.entity'
+import { Order, OrderItem } from 'src/orders/entities/order.entity'
+import { formatResponse, OrderStatus } from 'src/types/types'
+import { AuthSession } from 'src/auth/entities/auth.entity'
 
 @Injectable()
 export class CustomersService {
@@ -16,23 +18,98 @@ export class CustomersService {
     private orderRepository: Repository<Order>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(OrderItem)
+    private orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(AuthSession)
+    private authSessionRepository: Repository<AuthSession>
   ){}
 
-  private formatResponse(status: 'success' | 'error', message: string, data: any) {
-    return { status, message, data }
-  }
 
   async findOne(id: string) {
     try {
       const user = await this.userRepository.findOne({ where: { id } })
       if (!user) {
-        return this.formatResponse('error', 'User not found', null)
+        return formatResponse('error', 'User not found', null)
       }
-      return this.formatResponse('success', 'User found', user)
+      return formatResponse('success', 'User found', user)
     } catch (error) {
-      return this.formatResponse('error', 'An error occurred while fetching user', null)
+      return formatResponse('error', 'An error occurred while fetching user', null)
     }
   }
+  async findDashboardStat(userId: string) {
+    // Get user details
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['session'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Get all orders for the user
+    const orders = await this.orderRepository.find({
+      where: { customer: { id: userId } },
+      relations: ['items', 'items.product', 'items.vendor'],
+    });
+
+    // Calculate order statistics
+    const totalOrders = orders.length;
+    const pendingOrders = orders.filter(
+      (order) => order.status === OrderStatus.PENDING,
+    ).length;
+    const completedOrders = orders.filter(
+      (order) => order.status === OrderStatus.COMPLETED,
+    ).length;
+    const cancelledOrders = orders.filter(
+      (order) => order.status === OrderStatus.CANCELLED,
+    ).length;
+
+    // Calculate total spending
+    const totalSpent = orders
+      .filter((order) => order.status === OrderStatus.COMPLETED)
+      .reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Get recent orders (last 5)
+    const recentOrders = orders
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+      .slice(0, 5)
+      .map((order) => ({
+        id: order.id,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        createdAt: order.created_at,
+        itemCount: order.itemCount,
+        deliveryOption: order.deliveryOption,
+      }));
+
+    // Prepare dashboard data
+    const data = {
+      user: {
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        phone: user.phone,
+        isVerified: user.is_verified,
+        lastLogin: user.session?.last_login,
+      },
+      stats: {
+        totalOrders,
+        pendingOrders,
+        completedOrders,
+        cancelledOrders,
+        totalSpent: totalSpent,
+        averageOrderValue: totalOrders > 0 ? totalSpent / totalOrders : 0,
+      },
+      recentActivity: {
+        recentOrders,
+      },
+  
+    };
+
+    return formatResponse('success', 'Dashboard stats retrieved', data);
+  }
+
 
   async findOrders(userId: string) {
     try {
@@ -104,9 +181,9 @@ export class CustomersService {
         };
       });
       
-      return this.formatResponse('success', 'Orders fetched successfully', formattedOrders)
+      return formatResponse('success', 'Orders fetched successfully', formattedOrders)
     } catch (error) {
-      return this.formatResponse('error', 'An error occurred while fetching orders', null)
+      return formatResponse('error', 'An error occurred while fetching orders', null)
     }
   }
 

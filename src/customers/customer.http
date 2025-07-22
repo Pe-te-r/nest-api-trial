@@ -2,4 +2,4 @@
 @customerId=c6fe45c8-0938-47f3-8317-495b3bcbc97e
 
 ### Get a customer orders by id
-GET {{url}}/{{customerId}}/orders
+GET {{url}}/{{customerId}}/dashboard
