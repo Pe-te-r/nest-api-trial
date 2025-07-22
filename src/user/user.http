@@ -8,3 +8,8 @@ Authorization: Bearer {{accessToken}}
 ###
 GET {{url}}
 Authorization: Bearer {{accessToken}}
+
+
+### fetch vendors details
+@userId=0628dc0a-d697-4a87-8a70-2b390ad29739
+GET {{url}}/admin/{{userId}}?admin=true

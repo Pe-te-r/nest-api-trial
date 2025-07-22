@@ -31,6 +31,12 @@ export class UserController {
     return this.userService.findProducts(id)
   }
 
+  @Get('admin/:id')
+  @Public()
+  findForAdmin(@Query() query: allUserQuery, @Param('id') id: string) {
+    return this.userService.findUsersDetails(id,query)
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto)
