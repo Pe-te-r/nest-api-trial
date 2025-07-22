@@ -89,14 +89,25 @@ export class ProductsService {
     return formatResponse('success', 'Product created successfully', null)
   }
 
-  async findAll() {
-    const products = await this.productRepository.find({
-      relations: { store: true },
-      select: { store: { id: true } },
-    })
-    if (!products) throw new NotFoundException('no product found')
-    return formatResponse('success', 'All products retrieved', products)
+  async findAll(category?: string) {
+  const queryBuilder = this.productRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.subCategory', 'subCategory')
+    .leftJoinAndSelect('subCategory.category', 'category')
+    .leftJoinAndSelect('product.store', 'store');
+
+  if (category) {
+    queryBuilder.where('category.name = :category', { category });
   }
+
+  const products = await queryBuilder.getMany();
+
+  if (!products || products.length === 0) {
+    throw new NotFoundException('No products found');
+  }
+
+  return formatResponse('success', 'All products retrieved', products);
+}
 
   findOne(id: string) {
     // TODO: Replace with DB query
