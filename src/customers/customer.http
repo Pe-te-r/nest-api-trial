@@ -1,0 +1,5 @@
+@url=http://localhost:4001/customers
+@customerId=c6fe45c8-0938-47f3-8317-495b3bcbc97e
+
+### Get a customer orders by id
+GET {{url}}/{{customerId}}/orders
