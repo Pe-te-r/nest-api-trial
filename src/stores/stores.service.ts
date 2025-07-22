@@ -8,7 +8,7 @@ import { User } from 'src/user/entities/user.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { formatResponse } from 'src/types/types'
 import { UserRole } from 'src/utils/enums'
-import { OrderItem } from 'src/orders/entities/order.entity'
+import { Order, OrderItem } from 'src/orders/entities/order.entity'
 
 @Injectable()
 export class StoresService {
@@ -21,6 +21,8 @@ export class StoresService {
     private readonly ordersItemsRepository: Repository<OrderItem>,
     @InjectRepository(Constituency)
     private readonly constituencyRepository: Repository<Constituency>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
   ) { }
 
   async create(createStoreDto: CreateStoreDto) {
@@ -103,18 +105,73 @@ export class StoresService {
     return formatResponse('success', 'Shops retrieved successfully', formattedShops)
   }
 
-  async findOne(id: string): Promise<Store> {
-    const store = await this.storeRepository.findOne({
-      where: { id },
-      relations: ['user', 'constituency', 'constituency.county'],
-    })
+async findOne(id: string, isAdmin: boolean = true) {
+  const store = await this.storeRepository.findOne({
+    where: { id },
+    relations: [
+      'user',
+      'constituency',
+      'constituency.county',
+      'products' // We'll use this to check product existence
+    ],
+  });
 
-    if (!store) {
-      throw new NotFoundException(`Store with ID ${id} not found`)
-    }
-
-    return store
+  if (!store) {
+    throw new NotFoundException(`Store with ID ${id} not found`);
   }
+
+  // Get order count for this store
+  const orderCount = await this.orderRepository.count({
+    where: {
+      items: {
+        vendor: { id: store.id }
+      }
+    }
+  });
+
+  const baseResponse = {
+    id: store.id,
+    businessName: store.businessName,
+    businessDescription: store.businessDescription,
+    businessType: store.businessType,
+    businessContact: store.businessContact,
+    streetAddress: store.streetAddress,
+    approved: store.approved,
+    hasProducts: store.products.length > 0,
+    productCount: store.products.length,
+    orderCount,
+    location: {
+      constituency: store.constituency?.name,
+      county: store.constituency?.county?.county_name,
+    },
+    createdAt: store.user?.created_at,
+    updatedAt: store.user?.updated_at,
+  };
+
+  if (isAdmin) {
+    const adminResponse = {
+      ...baseResponse,
+      vendorDetails: {
+        id: store.user?.id,
+        firstName: store.user?.first_name,
+        lastName: store.user?.last_name,
+        email: store.user?.email,
+        phone: store.user?.phone,
+        role: store.user?.role,
+        isVerified: store.user?.is_verified,
+        accountStatus: store.user?.account_status,
+        lastLogin: store.user?.session?.last_login,
+      },
+      termsAccepted: store.termsAccepted,
+      approvalStatus: store.approved,
+      // Add any other admin-specific fields
+    };
+
+    return formatResponse('success', 'Store details retrieved (admin view)', adminResponse);
+  }
+
+  return formatResponse('success', 'Store details retrieved', baseResponse);
+}
   
   async findVendorOrders(vendorId: string) {
     const orders = await this.ordersItemsRepository.find({

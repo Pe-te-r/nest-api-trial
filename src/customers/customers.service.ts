@@ -36,78 +36,89 @@ export class CustomersService {
       return formatResponse('error', 'An error occurred while fetching user', null)
     }
   }
-  async findDashboardStat(userId: string) {
+async findDashboardStat(userId: string) {
     // Get user details
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['session'],
+      select: ['id', 'first_name', 'last_name', 'email', 'phone', 'role', 'is_verified', 'account_status', 'created_at'],
     });
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Get all orders for the user
-    const orders = await this.orderRepository.find({
-      where: { customer: { id: userId } },
-      relations: ['items', 'items.product', 'items.vendor'],
+    // Get user's auth session details
+    const authSession = await this.authSessionRepository.findOne({
+      where: { userId },
+      select: ['last_login', 'otp_enabled', 'created_at'],
     });
 
-    // Calculate order statistics
-    const totalOrders = orders.length;
-    const pendingOrders = orders.filter(
-      (order) => order.status === OrderStatus.PENDING,
-    ).length;
-    const completedOrders = orders.filter(
-      (order) => order.status === OrderStatus.COMPLETED,
-    ).length;
-    const cancelledOrders = orders.filter(
-      (order) => order.status === OrderStatus.CANCELLED,
-    ).length;
-
-    // Calculate total spending
-    const totalSpent = orders
-      .filter((order) => order.status === OrderStatus.COMPLETED)
-      .reduce((sum, order) => sum + order.totalAmount, 0);
+    // Get order statistics
+    const orderStats = await this.orderRepository
+      .createQueryBuilder('order')
+      .select([
+        'COUNT(order.id) as total_orders',
+        `SUM(CASE WHEN order.status = '${OrderStatus.PENDING}' THEN 1 ELSE 0 END) as pending_orders`,
+        `SUM(CASE WHEN order.status = '${OrderStatus.READY_FOR_PICKUP}' THEN 1 ELSE 0 END) as ready_orders`,
+        `SUM(CASE WHEN order.status = '${OrderStatus.IN_TRANSIT}' THEN 1 ELSE 0 END) as transit_orders`,
+        `SUM(CASE WHEN order.status = '${OrderStatus.COMPLETED}' THEN 1 ELSE 0 END) as completed_orders`,
+        `SUM(CASE WHEN order.status = '${OrderStatus.CANCELLED}' THEN 1 ELSE 0 END) as cancelled_orders`,
+        'SUM(order.totalAmount) as total_spent',
+      ])
+      .where('order.customerId = :userId', { userId })
+      .getRawOne();
 
     // Get recent orders (last 5)
-    const recentOrders = orders
-      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
-      .slice(0, 5)
-      .map((order) => ({
-        id: order.id,
-        totalAmount: order.totalAmount,
-        status: order.status,
-        createdAt: order.created_at,
-        itemCount: order.itemCount,
-        deliveryOption: order.deliveryOption,
-      }));
+    const recentOrders = await this.orderRepository.find({
+      where: { customer: { id: userId } },
+      order: { created_at: 'DESC' },
+      take: 5,
+      relations: ['items', 'items.product', 'items.vendor'],
+      select: [
+        'id',
+        'totalAmount',
+        'status',
+        'created_at',
+        'deliveryOption',
+        'paymentMethod',
+      ],
+    });
 
-    // Prepare dashboard data
+    // Format recent orders data
+    const formattedRecentOrders = recentOrders.map(order => ({
+      id: order.id,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      date: order.created_at,
+      deliveryOption: order.deliveryOption,
+      paymentMethod: order.paymentMethod,
+      itemCount: order.items?.length || 0,
+      vendors: [...new Set(order.items?.map(item => item.vendor?.businessName))].filter(name => name),
+    }));
+
+    // Prepare the dashboard data
     const data = {
       user: {
-        firstName: user.first_name,
-        lastName: user.last_name,
-        email: user.email,
-        phone: user.phone,
-        isVerified: user.is_verified,
-        lastLogin: user.session?.last_login,
+        ...user,
+        last_login: authSession?.last_login,
+        otp_enabled: authSession?.otp_enabled,
+        member_since: user.created_at,
       },
       stats: {
-        totalOrders,
-        pendingOrders,
-        completedOrders,
-        cancelledOrders,
-        totalSpent: totalSpent,
-        averageOrderValue: totalOrders > 0 ? totalSpent / totalOrders : 0,
+        total_orders: parseInt(orderStats.total_orders) || 0,
+        pending_orders: parseInt(orderStats.pending_orders) || 0,
+        processing_orders: parseInt(orderStats.processing_orders) || 0,
+        completed_orders: parseInt(orderStats.completed_orders) || 0,
+        cancelled_orders: parseInt(orderStats.cancelled_orders) || 0,
+        total_spent: parseFloat(orderStats.total_spent) || 0,
+        avg_order_value: orderStats.total_orders > 0 
+          ? (parseFloat(orderStats.total_spent) / parseInt(orderStats.total_orders)).toFixed(2)
+          : 0,
       },
-      recentActivity: {
-        recentOrders,
-      },
-  
+      recent_orders: formattedRecentOrders,
     };
 
-    return formatResponse('success', 'Dashboard stats retrieved', data);
+    return formatResponse('success', 'Dashboard stats retrieved successfully', data);
   }
 
 

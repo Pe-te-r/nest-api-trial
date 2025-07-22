@@ -23,6 +23,7 @@ export class StoresController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.storesService.findOne(id)
   }

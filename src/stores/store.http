@@ -1,7 +1,11 @@
-@url=http://192.168.137.40:4001
+@url=http://localhost:4001
 
 ### Get all stores
 GET {{url}}/stores
 
-### Get store by id
+### Get store by id orders
 GET {{url}}/stores/056db2d2-de4e-4352-9db1-73412f3ca5f2/orders
+
+
+### Get store by id
+GET {{url}}/stores/619810d6-804b-40c1-8df5-3a84e1af4386
