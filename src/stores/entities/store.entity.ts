@@ -49,3 +49,4 @@ export class Store {
   @OneToMany(() => Product, (product) => product.store)
   products: Product[]
 }
+

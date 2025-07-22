@@ -19,7 +19,12 @@ export class CustomersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.customersService.findOne(+id)
+    return this.customersService.findOne(id)
+  }
+
+  @Get(':id/orders')
+  findOrders(@Param('id') id: string) {
+    return this.customersService.findOrders(id)
   }
 
   @Patch(':id')
