@@ -3,3 +3,6 @@
 
 ### Get a customer orders by id
 GET {{url}}/{{customerId}}/dashboard
+###
+
+GET {{url}}/admin/dashboard

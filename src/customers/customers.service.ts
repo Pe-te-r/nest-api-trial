@@ -6,8 +6,18 @@ import { Repository } from 'typeorm'
 import { Customer } from './entities/customer.entity'
 import { User } from 'src/user/entities/user.entity'
 import { Order, OrderItem } from 'src/orders/entities/order.entity'
-import { formatResponse, OrderStatus } from 'src/types/types'
+import { DriverStatus, formatResponse, OrderStatus } from 'src/types/types'
 import { AuthSession } from 'src/auth/entities/auth.entity'
+import { AccountStatus, UserRole } from 'src/utils/enums'
+import { Product } from 'src/products/entities/product.entity'
+import { Store } from 'src/stores/entities/store.entity'
+import { Driver } from 'src/driver/entities/driver.entity'
+import { Category } from 'src/category/entities/category.entity'
+import { SubCategory } from 'src/sub_category/entities/sub_category.entity'
+import { County } from 'src/county/entities/county.entity'
+import { Constituency } from 'src/constituency/entities/constituency.entity'
+import { PickStation } from 'src/pick_station/entities/pick_station.entity'
+import { Assignment } from 'src/assignment/entities/assignment.entity'
 
 @Injectable()
 export class CustomersService {
@@ -21,7 +31,18 @@ export class CustomersService {
     @InjectRepository(OrderItem)
     private orderItemRepository: Repository<OrderItem>,
     @InjectRepository(AuthSession)
-    private authSessionRepository: Repository<AuthSession>
+    private authSessionRepository: Repository<AuthSession>,
+    @InjectRepository(Product) private productRepository: Repository<Product>,
+    @InjectRepository(Driver) private driverRepository: Repository<Driver>,
+    @InjectRepository(Store) private storeRepository: Repository<Store>,
+    @InjectRepository(Category) private categoryRepository: Repository<Category>,
+    @InjectRepository(SubCategory) private subCategoryRepository: Repository<SubCategory>,
+    @InjectRepository(County) private countyRepository: Repository<County>,
+    @InjectRepository(PickStation) private pickStationRepository: Repository<PickStation>,
+    @InjectRepository(Constituency) private constituencyRepository: Repository<Constituency>,
+    @InjectRepository(Assignment) private assignmentRepository: Repository<Assignment>,
+
+      
   ){}
 
 
@@ -121,6 +142,87 @@ async findDashboardStat(userId: string) {
     return formatResponse('success', 'Dashboard stats retrieved successfully', data);
   }
 
+ 
+  async getAdminDashboardStat() {
+    // User statistics
+    const totalUsers = await this.userRepository.count();
+    const customersCount = await this.userRepository.count({ where: { role: UserRole.CUSTOMER } });
+    const storeOwnersCount = await this.userRepository.count({ where: { role: UserRole.VENDOR } });
+    const driversCount = await this.userRepository.count({ where: { role: UserRole.DRIVER } });
+    const adminsCount = await this.userRepository.count({ where: { role: UserRole.ADMIN } });
+    
+    // Store statistics
+    const totalStores = await this.storeRepository.count();
+    const activeStores = await this.storeRepository.count();
+    
+    // Product statistics
+    const totalProducts = await this.productRepository.count();
+    const availableProducts = await this.productRepository.count({ where: { isAvailable: true } });
+    const outOfStockProducts = await this.productRepository.count({ where: { stock: 0 } });
+    
+    // Order statistics
+    const totalOrders = await this.orderRepository.count();
+    const pendingOrders = await this.orderRepository.count({ where: { status: OrderStatus.PENDING } });
+    const processingOrders = await this.orderRepository.count({ where: { status: OrderStatus.READY_FOR_PICKUP } });
+    const completedOrders = await this.orderRepository.count({ where: { status: OrderStatus.COMPLETED } });
+    const cancelledOrders = await this.orderRepository.count({ where: { status: OrderStatus.CANCELLED } });
+    
+    // Driver statistics
+    const totalDrivers = await this.driverRepository.count();
+    const availableDrivers = await this.driverRepository.count({ where: { status: DriverStatus.AVAILABLE } });
+    const onDeliveryDrivers = await this.driverRepository.count({ where: { status: DriverStatus.OFFLINE } });
+    
+    // Recent activity (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentUsers = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.created_at >= :date', { date: sevenDaysAgo })
+      .getCount();
+      
+    const recentOrders = await this.orderRepository
+      .createQueryBuilder('order')
+      .where('order.created_at >= :date', { date: sevenDaysAgo })
+      .getCount();
+    
+  
+    // Prepare the data object
+    const data = {
+      users: {
+        total: totalUsers,
+        customers: customersCount,
+        storeOwners: storeOwnersCount,
+        drivers: driversCount,
+        admins: adminsCount,
+        recent: recentUsers,
+      },
+      stores: {
+        total: totalStores,
+        active: activeStores,
+      },
+      products: {
+        total: totalProducts,
+        available: availableProducts,
+        outOfStock: outOfStockProducts,
+      },
+      orders: {
+        total: totalOrders,
+        pending: pendingOrders,
+        processing: processingOrders,
+        completed: completedOrders,
+        cancelled: cancelledOrders,
+        recent: recentOrders,
+      },
+      drivers: {
+        total: totalDrivers,
+        available: availableDrivers,
+        onDelivery: onDeliveryDrivers,
+      },
+    };
+
+    return formatResponse('success', 'Dashboard stats retrieved successfully', data);
+  }
 
   async findOrders(userId: string) {
     try {

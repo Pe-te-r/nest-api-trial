@@ -28,6 +28,12 @@ export class CustomersController {
     return this.customersService.findOrders(id)
   }
 
+  @Get('admin/dashboard')
+  @Public()
+  getAdminDetailsDasboardStat() {
+    return this.customersService.getAdminDashboardStat()
+     }
+
   @Get(':id/dashboard')
   @Public()
   findDashboardStat(@Param('id') id: string) {
