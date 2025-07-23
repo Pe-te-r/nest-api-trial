@@ -8,4 +8,4 @@ GET {{url}}/stores/056db2d2-de4e-4352-9db1-73412f3ca5f2/orders
 
 
 ### Get store by id
-GET {{url}}/stores/619810d6-804b-40c1-8df5-3a84e1af4386
+GET {{url}}/stores/973b6100-1a62-46e3-a0b1-809e817e0cfa/dashboard

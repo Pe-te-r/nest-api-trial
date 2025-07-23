@@ -6,9 +6,10 @@ import { UpdateStoreDto } from './dto/update-store.dto'
 import { Store } from './entities/store.entity'
 import { User } from 'src/user/entities/user.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
-import { formatResponse } from 'src/types/types'
+import { formatResponse, OrderStatus } from 'src/types/types'
 import { UserRole } from 'src/utils/enums'
 import { Order, OrderItem } from 'src/orders/entities/order.entity'
+import { Product } from 'src/products/entities/product.entity'
 
 @Injectable()
 export class StoresService {
@@ -23,8 +24,81 @@ export class StoresService {
     private readonly constituencyRepository: Repository<Constituency>,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
   ) { }
 
+async findStoreDashboardStats(userId: string) {
+  try {
+    // Get store with basic relations
+    const store = await this.storeRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user', 'constituency', 'products', 'constituency.county'],
+    });
+    console.log('Store found:', store);
+
+    if (!store) {
+      return formatResponse('error', 'Store not found', null);
+    }
+
+      console.log('one')
+    // Count products directly from the relation
+    const totalProducts = store.products?.length || 0;
+    const availableProducts = store.products?.filter(p => p.isAvailable).length || 0;
+      console.log('two')
+
+    // Get basic order count - query OrderItem where vendor = store
+    const totalOrders = await this.orderItemRepository.count({
+      where: { vendor: { id: store.id } }
+    });
+      console.log('three')
+
+    console.log('Total orders:', totalOrders);
+    // Get completed orders count
+    const completedOrders = await this.orderItemRepository.count({
+      where: { 
+        vendor: { id: store.id },
+        itemStatus: OrderStatus.COMPLETED 
+      }
+    });
+    console.log('Completed orders:', completedOrders);
+    return formatResponse('success', 'Store dashboard stats retrieved successfully', {
+      storeInfo: {
+        id: store.id,
+        businessName: store.businessName,
+        businessContact: store.businessContact,
+        streetAddress: store.streetAddress,
+        approved: store.approved,
+        constituency: store.constituency ? {
+          id: store.constituency.id,
+          name: store.constituency.name
+        } : null,
+        county:{
+          id: store.constituency?.county?.id,
+          name: store.constituency?.county?.county_name
+        }
+      },
+      vendorInfo: {
+        firstName: store.user.first_name,
+        lastName: store.user.last_name,
+        email: store.user.email,
+        phone: store.user.phone,
+      },
+      stats: {
+        totalProducts,
+        availableProducts,
+        unavailableProducts: totalProducts - availableProducts,
+        totalOrders,
+        completedOrders,
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching store dashboard stats:', error);
+    return formatResponse('error', 'Failed to fetch dashboard stats', null);
+  }
+}
   async create(createStoreDto: CreateStoreDto) {
     console.log('data received', createStoreDto)
     // Verify user exists

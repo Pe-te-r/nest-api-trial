@@ -25,11 +25,15 @@ export class DriverController {
   }
 
   @Get(':id/orders')
-  @Public()
   findDriverOrders(@Param('id') id: string) {
     return this.driverService.findDriverOrders(id)
   }
 
+  // driver dashboard
+  @Get('dashboard/:id')
+  findDriverDashboard(@Param('id') id: string) {
+    return this.driverService.findDriverDashboard(id)
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateDriverDto: UpdateDriverDto) {

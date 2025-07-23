@@ -3,7 +3,7 @@ import { CreateDriverDto } from './dto/create-driver.dto'
 import { UpdateDriverDto } from './dto/update-driver.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { formatResponse, OrderStatus } from 'src/types/types'
+import { AssignmentStatus, formatResponse, OrderStatus } from 'src/types/types'
 import { Driver } from './entities/driver.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { OrderItem } from 'src/orders/entities/order.entity'
@@ -54,6 +54,39 @@ export class DriverService {
   async findAll(): Promise<Driver[]> {
     return this.driverRepository.find({ relations: ['user', 'assignments'] });
   }
+
+async findDriverDashboard(id: string) {
+  const driver = await this.driverRepository.findOne({
+    where: { user: { id } },
+    relations: ['user', 'assignments', 'assignments.orderItem'],
+  });
+
+  if (!driver) throw new NotFoundException(`Driver with id ${id} not found`);
+
+  const totalAssignments = driver.assignments.length;
+  const completedAssignments = driver.assignments.filter(a => a.status === AssignmentStatus.COMPLETED).length;
+  const pendingAssignments = driver.assignments.filter(a => a.status === AssignmentStatus.PENDING).length;
+  const inProgressAssignments = driver.assignments.filter(a => a.status === AssignmentStatus.IN_PROGRESS).length;
+
+  const dashboardData = {
+    id: driver.id,
+    name: `${driver.user.first_name} ${driver.user.last_name ?? ''}`.trim(),
+    email: driver.user.email,
+    phone: driver.user.phone,
+    status: driver.status,
+    vehicle_type: driver.vehicle_type,
+    license_plate: driver.license_plate,
+    total_assignments: totalAssignments,
+    completed_assignments: completedAssignments,
+    pending_assignments: pendingAssignments,
+    in_progress_assignments: inProgressAssignments,
+    created_at: driver.created_at,
+    updated_at: driver.updated_at,
+  };
+
+  return formatResponse('success', 'Driver dashboard fetched successfully', dashboardData);
+}
+
 
   async findOne(id: string): Promise<Driver> {
     const driver = await this.driverRepository.findOne({

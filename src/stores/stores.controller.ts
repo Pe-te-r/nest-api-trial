@@ -28,6 +28,12 @@ export class StoresController {
     return this.storesService.findOne(id)
   }
 
+  @Get(':id/dashboard')
+  @Public()
+  findStoreDashboardStats(@Param('id', ParseUUIDPipe) userId: string) {
+    return this.storesService.findStoreDashboardStats(userId)
+  }
+
   @Get(':id/orders')
   @Public()
   findOrders(@Param('id', ParseUUIDPipe) id: string) {
