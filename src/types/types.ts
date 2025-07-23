@@ -116,3 +116,25 @@ export enum OrderStatus {
   CANCELLED = 'cancelled',
   REJECTED = 'rejected',
 }
+
+export interface PaystackVerificationResponse {
+  status: boolean;
+  message: string;
+  data: {
+    amount: number;
+    currency: string;
+    transaction_date: string;
+    status: string;
+    reference: string;
+    metadata: any;
+    customer: {
+      email: string;
+      customer_code: string;
+    };
+    authorization: {
+      authorization_code: string;
+      card_type: string;
+      last4: string;
+    };
+  };
+}

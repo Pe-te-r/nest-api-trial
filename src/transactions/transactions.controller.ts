@@ -1,9 +1,24 @@
 import { Controller, Post, Body, Get, Query } from '@nestjs/common'
 import { TransactionsService } from './transactions.service'
+import { UserD } from 'src/common/decorators/user.decorator'
 
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
+
+  // should receive amount and email
+  @Post('create')
+  createTransaction(
+    @Body()body: {amount: number},
+    @UserD('email') email: string,
+  ) {
+    return this.transactionsService.createTransaction(body.amount, email)
+  }
+
+  @Get('verify')
+  verifyTransaction(@Query('reference') reference: string) {
+    return this.transactionsService.verifyTransaction(reference)
+  }
 
   @Post('customer-payment')
   createCustomerPayment(

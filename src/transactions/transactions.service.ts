@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Transaction } from './entities/transaction.entity'
 import { TransactionLedger } from './entities/transaction-ledger.entity'
+import { formatResponse, PaystackVerificationResponse } from 'src/types/types'
 
 @Injectable()
 export class TransactionsService {
@@ -12,6 +13,62 @@ export class TransactionsService {
     @InjectRepository(TransactionLedger)
     private readonly ledgerRepository: Repository<TransactionLedger>,
   ) {}
+
+  async createTransaction(amount: number, email: string) {
+ try {
+    const response = await fetch('https://api.paystack.co/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        amount: amount, //amount in kes
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Payment initialization failed');
+    }
+    const json_data = await response.json();
+
+    return formatResponse('success', 'Transaction created successfully', json_data)
+  } catch (error) {
+    console.error('Payment error:', error);
+    throw new Error(error instanceof Error ? error.message : 'Payment initialization failed');
+  }
+  }
+
+
+async verifyTransaction(reference: string) {
+  try {
+    const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Transaction verification failed');
+    }
+
+    const data: PaystackVerificationResponse = await response.json();
+    
+    if (!data.status || data.data.status !== 'success') {
+      throw new Error(data.message || 'Transaction not successful');
+    }
+
+    return formatResponse('success', 'Transaction verified successfully', data.data.status);
+  } catch (error) {
+    console.error('Verification error:', error);
+    throw new Error(error instanceof Error ? error.message : 'Transaction verification failed');
+  }
+}
 
   async createCustomerPayment(
     amount: number,
