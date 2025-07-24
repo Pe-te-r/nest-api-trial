@@ -25,7 +25,7 @@ export class TransactionsService {
       },
       body: JSON.stringify({
         email,
-        amount: amount, //amount in kes
+        amount: amount,
       }),
     });
 

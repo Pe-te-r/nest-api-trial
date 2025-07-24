@@ -15,7 +15,7 @@ export class TransactionsController {
     return this.transactionsService.createTransaction(body.amount, email)
   }
 
-  @Get('verify/:reference')
+    @Get('verify/:reference')
   verifyTransaction(@Param('reference') reference: string) {
     return this.transactionsService.verifyTransaction(reference)
   }
