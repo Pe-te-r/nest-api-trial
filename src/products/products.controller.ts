@@ -52,6 +52,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Product successfully updated' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+    console.log('update product data', updateProductDto)
     return this.productsService.update(id, updateProductDto)
   }
 

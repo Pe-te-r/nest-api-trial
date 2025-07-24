@@ -120,11 +120,17 @@ export class ProductsService {
     return formatResponse('success', 'Product found', product)
   }
 
-  update(id: string, updateProductDto: UpdateProductDto) {
-    // TODO: Update logic
-    const updatedProduct = { id, ...updateProductDto } // Mock
-
-    return formatResponse('success', 'Product updated successfully', updatedProduct)
+ async update(id: string, updateProductDto: UpdateProductDto) {
+    //do the update logic here
+    const product_found = await this.productRepository.findOne({ where: { id } })
+    console.log('product found', product_found)
+    if (!product_found) {
+      // throw new NotFoundException(`Product with ID ${id} not found`)
+      return formatResponse('error', `Product with ID ${id} not found`, null)
+    }
+    const updatedProduct = Object.assign(product_found, updateProductDto)
+    await this.productRepository.save(updatedProduct)
+    return formatResponse('success', 'Product updated successfully', null)
   }
 
   remove(id: string) {
