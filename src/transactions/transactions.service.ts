@@ -4,6 +4,7 @@ import { Repository } from 'typeorm'
 import { Transaction } from './entities/transaction.entity'
 import { TransactionLedger } from './entities/transaction-ledger.entity'
 import { formatResponse, PaystackVerificationResponse } from 'src/types/types'
+const  PAYSTACK_SECRET_KEY ='sk_test_1bf93a41516eaed4f14ffa21a2c30cffa2dafcbd';
 
 @Injectable()
 export class TransactionsService {
@@ -13,13 +14,13 @@ export class TransactionsService {
     @InjectRepository(TransactionLedger)
     private readonly ledgerRepository: Repository<TransactionLedger>,
   ) {}
-
+  
   async createTransaction(amount: number, email: string) {
- try {
+    try {
     const response = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -47,7 +48,7 @@ async verifyTransaction(reference: string) {
     const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
         'Content-Type': 'application/json',
       },
     });
@@ -58,6 +59,7 @@ async verifyTransaction(reference: string) {
     }
 
     const data: PaystackVerificationResponse = await response.json();
+    console.log('paystack data', data);
     
     if (!data.status || data.data.status !== 'success') {
       throw new Error(data.message || 'Transaction not successful');

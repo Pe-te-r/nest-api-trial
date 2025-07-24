@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query } from '@nestjs/common'
+import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common'
 import { TransactionsService } from './transactions.service'
 import { UserD } from 'src/common/decorators/user.decorator'
 
@@ -15,8 +15,8 @@ export class TransactionsController {
     return this.transactionsService.createTransaction(body.amount, email)
   }
 
-  @Get('verify')
-  verifyTransaction(@Query('reference') reference: string) {
+  @Get('verify/:reference')
+  verifyTransaction(@Param('reference') reference: string) {
     return this.transactionsService.verifyTransaction(reference)
   }
 
