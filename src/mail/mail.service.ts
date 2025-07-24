@@ -42,6 +42,31 @@ export class MailService {
     })
   }
 
+  async sendVendorApprovalEmail(
+  email: string, 
+  first_name: string,
+  business_name: string,
+  business_location?: string,
+  constituency?: string
+) {
+  await this.mailerService.sendMail({
+    to: email,
+    subject: 'Congratulations! Your Vendor Application Has Been Approved',
+    template: 'vendor_approval', // This should match your template file name
+    context: {
+      first_name: first_name,
+      business_name: business_name,
+      business_location: business_location || '', // Fallback to empty if not provided
+      constituency: constituency || '', // Fallback to empty if not provided
+      vendor_dashboard_url: 'https://yourgrocerystore.com/vendor/dashboard',
+      platform_name: 'Grocery Store',
+      current_year: new Date().getFullYear(),
+      privacy_policy_url: 'https://yourgrocerystore.com/privacy',
+      terms_of_service_url: 'https://yourgrocerystore.com/terms',
+    },
+  });
+}
+
   async updatePassword(email: string, first_name: string) {
     await this.mailerService.sendMail({
       to: email,

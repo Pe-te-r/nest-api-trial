@@ -10,6 +10,7 @@ import { formatResponse, OrderStatus } from 'src/types/types'
 import { UserRole } from 'src/utils/enums'
 import { Order, OrderItem } from 'src/orders/entities/order.entity'
 import { Product } from 'src/products/entities/product.entity'
+import { MailService } from 'src/mail/mail.service'
 
 @Injectable()
 export class StoresService {
@@ -28,6 +29,7 @@ export class StoresService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private mailService: MailService,
   ) { }
 
 async findStoreDashboardStats(userId: string) {
@@ -388,7 +390,7 @@ async findOne(id: string, isAdmin: boolean = true) {
       // Find the store with its user relation
       const store = await transactionalEntityManager.findOne(Store, {
         where: { id },
-        relations: ['user'], // Make sure to include the user relation
+        relations: {user:true, constituency:true}, // Make sure to include the user relation
       })
 
       if (!store) {
@@ -403,6 +405,7 @@ async findOne(id: string, isAdmin: boolean = true) {
         // Update the user's role
         store.user.role = UserRole.VENDOR
         await transactionalEntityManager.save(store.user)
+        await this.mailService.sendVendorApprovalEmail(store.user.email, store.user.first_name, store.businessName, store.streetAddress, store.constituency?.name)
       }
 
       // Save the store

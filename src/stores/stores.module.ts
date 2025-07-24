@@ -7,9 +7,10 @@ import { Store } from './entities/store.entity'
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { Order, OrderItem } from 'src/orders/entities/order.entity'
 import { Product } from 'src/products/entities/product.entity'
+import { MailModule } from 'src/mail/mail.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Store, OrderItem, Constituency, Order,Product ])],
+  imports: [TypeOrmModule.forFeature([User, Store, OrderItem, Constituency, Order,Product ]), MailModule],
   controllers: [StoresController],
   providers: [StoresService],
 })
