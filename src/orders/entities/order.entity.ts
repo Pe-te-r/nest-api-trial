@@ -121,6 +121,6 @@ export class OrderItem {
   })
   itemStatus: OrderStatus
 
-  @OneToOne(() => Assignment, (assignment) => assignment.orderItem, { cascade: true })
-  assignment: Assignment
+ @OneToOne(() => Assignment, (assignment) => assignment.orderItem)
+  assignment: Assignment;
 }

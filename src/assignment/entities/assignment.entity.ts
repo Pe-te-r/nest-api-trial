@@ -22,8 +22,11 @@ export class Assignment {
   driver: Driver
 
   @OneToOne(() => OrderItem, (orderItem) => orderItem.assignment)
-  @JoinColumn({ name: 'order_item_id' })
-  orderItem: OrderItem
+  @JoinColumn()
+  orderItem: OrderItem;
+
+  @Column({ type: 'varchar' })
+  batchGroupId: string; 
 
   @Column({
     type: 'enum',
