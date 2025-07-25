@@ -22,13 +22,13 @@ export class AssignmentController {
     return this.assignmentService.findOne(+id)
   }
 
-  @Patch(':id')
+  @Patch(':id/order-items')
   update(@Param('id') id: string, @Body() updateAssignmentDto: UpdateAssignmentDto) {
-    return this.assignmentService.update(+id, updateAssignmentDto)
+    return this.assignmentService.update(id, updateAssignmentDto)
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.assignmentService.remove(+id)
+    return this.assignmentService.remove(id)
   }
 }

@@ -300,12 +300,7 @@ export class OrdersService {
       if (updateOrderDto.itemStatus === OrderStatus.READY_FOR_PICKUP && item.batchGroupId) {
         await this.checkBatchReadiness(item.batchGroupId);
       }
-      // mark the assigment is in transit for the driver
-      // if (updateOrderDto.itemStatus === OrderStatus.IN_TRANSIT && item.assignment) {
-      //   await this.assignmentRepository.update(item.assignment.id, {
-      //     status: AssignmentStatus.IN_PROGRESS
-      //   });
-      // }
+      // check the  if the batch 
   
     
       return formatResponse('success', 'Item status updated successfully', null);
@@ -370,7 +365,7 @@ private async assignDriverToBatch(batchGroupId: string, batchItems: OrderItem[])
     const assignment = manager.getRepository(Assignment).create({
       driver,
       batchGroupId,
-      status: AssignmentStatus.PENDING,
+      status: AssignmentStatus.ACCEPTED,
       orderItems: batchItems
     });
     

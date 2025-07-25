@@ -100,18 +100,17 @@ export enum VehicleType {
 }
 
 export enum AssignmentStatus {
-  PENDING = 'pending',
   ACCEPTED = 'accepted',
+  COMPLETED = 'completed',
   REJECTED = 'rejected',
   IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
 }
 
 export enum OrderStatus {
   PENDING = 'pending',
   READY_FOR_PICKUP = 'ready_for_pickup',
   IN_TRANSIT = 'in_transit',
+  DELIVERED = 'delivered',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
   REJECTED = 'rejected',

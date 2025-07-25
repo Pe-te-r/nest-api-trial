@@ -31,7 +31,7 @@ export class Assignment {
   @Column({
     type: 'enum',
     enum: AssignmentStatus,
-    default: AssignmentStatus.PENDING,
+    default: AssignmentStatus.ACCEPTED,
   })
   status: AssignmentStatus
 

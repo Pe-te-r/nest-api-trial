@@ -1,1 +1,4 @@
-export class CreateAssignmentDto {}
+export class CreateAssignmentDto {
+    
+    orderItemId: string;
+}

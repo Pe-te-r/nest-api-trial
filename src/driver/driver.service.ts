@@ -6,9 +6,10 @@ import { Repository } from 'typeorm'
 import { AssignmentStatus, formatResponse, OrderStatus } from 'src/types/types'
 import { Driver } from './entities/driver.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
-import { OrderItem } from 'src/orders/entities/order.entity'
+import { Order, OrderItem } from 'src/orders/entities/order.entity'
 import { User } from 'src/user/entities/user.entity'
 import { UserRole } from 'src/utils/enums'
+import { Store } from 'src/stores/entities/store.entity'
 
 type Assignments = {
   id: string;
@@ -65,7 +66,6 @@ async findDriverDashboard(id: string) {
 
   const totalAssignments = driver.assignments.length;
   const completedAssignments = driver.assignments.filter(a => a.status === AssignmentStatus.COMPLETED).length;
-  const pendingAssignments = driver.assignments.filter(a => a.status === AssignmentStatus.PENDING).length;
   const inProgressAssignments = driver.assignments.filter(a => a.status === AssignmentStatus.IN_PROGRESS).length;
 
   const dashboardData = {
@@ -78,7 +78,6 @@ async findDriverDashboard(id: string) {
     license_plate: driver.license_plate,
     total_assignments: totalAssignments,
     completed_assignments: completedAssignments,
-    pending_assignments: pendingAssignments,
     in_progress_assignments: inProgressAssignments,
     created_at: driver.created_at,
     updated_at: driver.updated_at,
@@ -114,221 +113,193 @@ async findDriverDashboard(id: string) {
     if (result.affected === 0) throw new NotFoundException(`Driver with id ${id} not found`);
     return { deleted: true };
   }
-  async findDriverOrders(userId: string) {
-    // Verify user exists
-    const user = await this.userRepository.findOne({ 
-      where: { id: userId } 
+async findDriverOrders(userId: string, status?: AssignmentStatus) {
+  // Verify user exists
+  const user = await this.userRepository.findOne({ 
+    where: { id: userId } 
+  });
+  
+  if (!user) {
+    throw new NotFoundException(`User with id ${userId} not found`);
+  }
+  console.log('User found:', user.id, user.first_name, user.last_name);
+
+  // Find driver with user relation
+  const driver = await this.driverRepository.findOne({
+    where: { user: { id: userId } },
+    relations: ['user']
+  });
+
+  if (!driver) {
+    throw new NotFoundException('Driver not found');
+  }
+  console.log('driver found:', driver.id, driver.user.first_name, driver.user.last_name);
+
+  // Build where clause based on status filter
+  const where: any = { driver: { id: driver.id } };
+  if (status) {
+    where.status = status;
+  }
+  console.log('Fetching assignments with where clause:', where);
+
+  // Fetch all assignments with enhanced relations
+  const assignments = await this.assignmentRepository.find({
+    where,
+    relations: [
+      'orderItems',
+      'orderItems.order',
+      'orderItems.order.customer',
+      'orderItems.order.constituency',
+      'orderItems.order.constituency.county',
+      'orderItems.order.pickStation',
+      'orderItems.order.pickStation.constituency',
+      'orderItems.order.pickStation.constituency.county',
+      'orderItems.product',
+      'orderItems.vendor',
+      'orderItems.vendor.constituency',
+      'orderItems.vendor.constituency.county'
+    ],
+    order: { created_at: 'DESC' }
+  });
+  console.log('Assignments fetched:', assignments.length);
+
+  if (!assignments || assignments.length === 0) {
+    return formatResponse('success', 'No orders found for this driver', {
+      driver: this.mapDriverDetails(driver),
+      assignments: []
     });
+  }
+
+  // Process each assignment
+  const processedAssignments = assignments.map(assignment => {
+    // All order items in an assignment should have the same vendor
+    const firstOrderItem = assignment.orderItems[0];
+    const vendor = firstOrderItem.vendor;
+    console.log('Processing assignment:', assignment.id, 'with vendor:', vendor.id);
     
-    if (!user) {
-      throw new NotFoundException(`User with id ${userId} not found`);
-    }
-  
-    // Find driver with user relation
-    const driver = await this.driverRepository.findOne({
-      where: { user: { id: userId } },
-      relations: ['user']
-    });
-  
-    if (!driver) {
-      throw new NotFoundException('Driver not found');
-    }
-  
-    // Fetch all assignments with enhanced relations
-    const assignments = await this.assignmentRepository.find({
-      where: { driver: { id: driver.id } },
-      relations: [
-        'orderItem',
-        'orderItem.order',
-        'orderItem.order.customer',
-        'orderItem.order.constituency',
-        'orderItem.order.constituency.county',
-        'orderItem.order.pickStation',
-        'orderItem.order.pickStation.constituency',
-        'orderItem.order.pickStation.constituency.county',
-        'orderItem.product',
-        'orderItem.product.store',
-        'orderItem.product.store.constituency',
-        'orderItem.product.store.constituency.county',
-        'orderItem.vendor',
-        'orderItem.vendor.constituency',
-        'orderItem.vendor.constituency.county'
-      ],
-      order: { created_at: 'DESC' }
-    });
-
-    console.log(assignments);
-  
-    if (!assignments || assignments.length === 0) {
-      throw new NotFoundException('No orders found for this driver');
-    }
-  
-    // Group assignments by batchGroupId
-    const groupedByBatch = assignments.reduce((acc, assignment) => {
-      const batchId = assignment.orderItems[0].batchGroupId || 'ungrouped';
-      if (!acc[batchId]) {
-        acc[batchId] = [];
+    // Group order items by their order (since one assignment can have items from multiple orders)
+    const ordersMap = new Map<string, any>();
+    
+    assignment.orderItems.forEach(orderItem => {
+      console.log('Processing order item:', orderItem.id);
+      const order = orderItem.order;
+      if (!ordersMap.has(order.id)) {
+        ordersMap.set(order.id, {
+          ...order,
+          items: [],
+          destination: this.getDestinationDetails(order)
+        });
       }
-      acc[batchId].push(assignment);
-      return acc;
-    }, {});
-  
-    // Transform grouped data for frontend
-    const groupedOrders = Object.entries(groupedByBatch).map(([batchId, batchAssignments]: [string, Assignment[]]) => {
-      const firstAssignment = batchAssignments[0];
-      const order = firstAssignment.orderItems[0].order;
-      const customer = order.customer;
-      const orderItemIds = this.getOrderItemIds(assignments);
-  
-      // Get all products in this batch with vendor details
-      const products = batchAssignments.map((assignment: Assignment) => {
-        const orderItem = assignment.orderItems;
-        const product = orderItem[0].product;
-        const vendor = orderItem[0].vendor;
-        const store = product[0].store;
+      ordersMap.get(order.id).items.push(this.mapOrderItemDetails(orderItem));
+    });
 
-        return {
-          assignmentId: assignment.id,
-          assignmentStatus: assignment.status,
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          imageUrl: product.imageUrl,
-          quantity: orderItem[0].quantity,
-          itemStatus: orderItem[0].itemStatus,
-          vendor: vendor ? {
-            id: vendor.id,
-            name: vendor.businessName,
-            contactPhone: vendor.businessContact,
-            location: {
-              constituency: vendor.constituency?.name,
-              county: vendor.constituency?.county?.county_name,
-              fullAddress: `${vendor.businessName}, ${vendor.constituency?.name}, ${vendor.constituency?.county?.county_name} County`
-            }
-          } : null,
-          store: store ? {
-            id: store.id,
-            name: store.businessName,
-            contactPhone: store.businessContact,
-            location: {
-              constituency: store.constituency?.name,
-              county: store.constituency?.county?.county_name,
-              fullAddress: `${store.businessName}, ${store.constituency?.name}, ${store.constituency?.county?.county_name} County`
-            }
-          } : null
-        };
-      });
-
-      // Calculate totals
-      const totalQuantity = products.reduce((sum, product) => sum + product.quantity, 0);
-      const totalAmount = products.reduce((sum, product) => sum + (product.price * product.quantity), 0);
-
-      // Prepare pickup locations (unique vendors/stores)
-      const pickupLocations = products.reduce((locations, product) => {
-        if (product.vendor) {
-          const vendorKey = `${product.vendor.id}-${product.vendor.location?.fullAddress}`;
-          if (!locations.vendors[vendorKey]) {
-            locations.vendors[vendorKey] = {
-              type: 'vendor',
-              ...product.vendor
-            };
-          }
-        }
-        if (product.store) {
-          const storeKey = `${product.store.id}-${product.store.location?.fullAddress}`;
-          if (!locations.stores[storeKey]) {
-            locations.stores[storeKey] = {
-              type: 'store',
-              ...product.store
-            };
-          }
-        }
-        return locations;
-      }, { vendors: {}, stores: {} });
-
-      // Combine all pickup locations
-      const allPickupLocations = [
-        ...Object.values(pickupLocations.vendors),
-        ...Object.values(pickupLocations.stores)
-      ];
-
-      // Prepare destination details
-      const isPickup = order.deliveryOption === 'pickup';
-      const destinationDetails = isPickup ? {
-        type: 'pickup',
-        station: {
-          id: order.pickStation?.id,
-          name: order.pickStation?.name,
-          contactPhone: order.pickStation?.contactPhone,
-          openingHours: `${order.pickStation?.openingTime} - ${order.pickStation?.closingTime}`,
-          isOpenNow: order.pickStation?.isOpenNow(),
-          location: {
-            constituency: order.pickStation?.constituency?.name,
-            county: order.pickStation?.constituency?.county?.county_name,
-            fullAddress: `${order.pickStation?.name}, ${order.pickStation?.constituency?.name}, ${order.pickStation?.constituency?.county?.county_name} County`
-          }
-        }
-      } : {
-        type: 'delivery',
-        location: {
-          constituency: order.constituency?.name,
-          county: order.constituency?.county?.county_name,
-          countyCode: order.constituency?.county?.county_code,
-          fullAddress: `${order.constituency?.name}, ${order.constituency?.county?.county_name} County`
-        }
-      };
-
-      return {
-        batchId: batchId === 'ungrouped' ? null : batchId,
+    return {
+      assignmentId: assignment.id,
+      assignmentStatus: assignment.status,
+      createdAt: assignment.created_at,
+      updatedAt: assignment.updated_at,
+      vendor: this.mapVendorDetails(vendor),
+      orders: Array.from(ordersMap.values()).map(order => ({
         orderId: order.id,
-        orderItemIds: orderItemIds,
-        orderStatus: order.status,
-        orderCreatedAt: order.created_at,
-        orderUpdatedAt: order.updated_at,
+        customer: this.mapCustomerDetails(order.customer),
+        status: order.status,
         deliveryOption: order.deliveryOption,
         deliveryFee: order.deliveryFee,
-        totalAmount,
-        totalQuantity,
+        totalAmount: order.totalAmount,
         specialInstructions: order.specialInstructions,
         deliveryInstructions: order.deliveryInstructions,
         paymentMethod: order.paymentMethod,
-        customer: customer ? {
-          id: customer.id,
-          name: `${customer.first_name} ${customer.last_name || ''}`.trim(),
-          phone: customer.phone,
-          email: customer.email
-        } : null,
-        products,
-        pickupLocations: allPickupLocations,
-        destination: destinationDetails,
-        timeline: {
-          created: order.created_at,
-          readyForPickup: order.status === OrderStatus.READY_FOR_PICKUP ? order.updated_at : null,
-          pickedUp: order.status === OrderStatus.IN_TRANSIT ? order.updated_at : null,
-          delivered: order.status === OrderStatus.COMPLETED ? order.updated_at : null
-        },
-        verification: {
-          pickupCode: isPickup ? firstAssignment.orderItems[0].randomCode : null,
-          requiresVerification: isPickup
-        }
-      };
-    });
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+        destination: order.destination,
+        items: order.items
+      }))
+    };
+  });
+
+  return formatResponse('success', 'Driver orders fetched successfully', {
+    driver: this.mapDriverDetails(driver),
+    assignments: processedAssignments
+  });
+}
+
+// Helper methods for mapping entities to DTOs
+private mapDriverDetails(driver: Driver) {
+  return {
+    id: driver.id,
+    name: `${driver.user.first_name} ${driver.user.last_name || ''}`.trim(),
+    status: driver.status,
+    vehicleType: driver.vehicle_type,
+    licensePlate: driver.license_plate,
+    contactPhone: driver.user.phone
+  };
+}
+
+private mapVendorDetails(vendor: Store) {
+  return {
+    id: vendor.id,
+    name: vendor.businessName,
+    contactPhone: vendor.businessContact,
+    location: {
+      constituency: vendor.constituency?.name,
+      county: vendor.constituency?.county?.county_name,
+      fullAddress: `${vendor.businessName}, ${vendor.constituency?.name}, ${vendor.constituency?.county?.county_name} County`
+    }
+  };
+}
+
+private mapCustomerDetails(customer: User) {
+  return {
+    id: customer.id,
+    name: `${customer.first_name} ${customer.last_name || ''}`.trim(),
+    phone: customer.phone,
+    email: customer.email
+  };
+}
+
+private mapOrderItemDetails(orderItem: OrderItem) {
+  return {
+    id: orderItem.id,
+    productId: orderItem.product.id,
+    productName: orderItem.product.name,
+    price: orderItem.product.price,
+    imageUrl: orderItem.product.imageUrl,
+    quantity: orderItem.quantity,
+    itemStatus: orderItem.itemStatus,
+    randomCode: orderItem.randomCode
+  };
+}
+
+private getDestinationDetails(order: Order) {
+  const isPickup = order.deliveryOption === 'pickup';
   
+  if (isPickup) {
     return {
-      status: 'success',
-      message: 'Driver orders fetched successfully',
-      data: {
-        driver: {
-          id: driver.id,
-          name: `${driver.user.first_name} ${driver.user.last_name || ''}`.trim(),
-          status: driver.status,
-          vehicleType: driver.vehicle_type,
-          licensePlate: driver.license_plate,
-          contactPhone: driver.user.phone
-        },
-        orders: groupedOrders
+      type: 'pickup',
+      station: {
+        id: order.pickStation?.id,
+        name: order.pickStation?.name,
+        contactPhone: order.pickStation?.contactPhone,
+        openingHours: `${order.pickStation?.openingTime} - ${order.pickStation?.closingTime}`,
+        isOpenNow: order.pickStation?.isOpenNow(),
+        location: {
+          constituency: order.pickStation?.constituency?.name,
+          county: order.pickStation?.constituency?.county?.county_name,
+          fullAddress: `${order.pickStation?.name}, ${order.pickStation?.constituency?.name}, ${order.pickStation?.constituency?.county?.county_name} County`
+        }
       }
     };
+  } else {
+    return {
+      type: 'delivery',
+      location: {
+        constituency: order.constituency?.name,
+        county: order.constituency?.county?.county_name,
+        countyCode: order.constituency?.county?.county_code,
+        fullAddress: `${order.constituency?.name}, ${order.constituency?.county?.county_name} County`
+      }
+    };
+  }
 }
 private  getOrderItemIds(assignments: any[]): string[] {
   return assignments

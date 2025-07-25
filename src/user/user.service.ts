@@ -198,10 +198,8 @@ export class UserService {
     .createQueryBuilder('assignment')
     .select([
       'COUNT(assignment.id) as total_assignments',
-      `SUM(CASE WHEN assignment.status = '${AssignmentStatus.PENDING}' THEN 1 ELSE 0 END) as pending_assignments`,
       `SUM(CASE WHEN assignment.status = '${AssignmentStatus.IN_PROGRESS}' THEN 1 ELSE 0 END) as in_progress_assignments`,
       `SUM(CASE WHEN assignment.status = '${AssignmentStatus.COMPLETED}' THEN 1 ELSE 0 END) as completed_assignments`,
-      `SUM(CASE WHEN assignment.status = '${AssignmentStatus.CANCELLED}' THEN 1 ELSE 0 END) as cancelled_assignments`,
     ])
     .where('assignment.driverId = :driverId', { driverId })
     .getRawOne();

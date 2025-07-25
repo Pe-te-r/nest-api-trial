@@ -3,6 +3,7 @@ import { DriverService } from './driver.service'
 import { CreateDriverDto } from './dto/create-driver.dto'
 import { UpdateDriverDto } from './dto/update-driver.dto'
 import { Public } from 'src/common/decorators/public.decorator'
+import { AssignmentStatus } from 'src/types/types'
 
 @Controller('driver')
 export class DriverController {
@@ -26,8 +27,8 @@ export class DriverController {
 
   @Get(':id/orders')
   @Public()
-  findDriverOrders(@Param('id') id: string) {
-    return this.driverService.findDriverOrders(id)
+  findDriverOrders(@Param('id') id: string, @Param('status') status?: AssignmentStatus) {
+    return this.driverService.findDriverOrders(id, status)
   }
 
   // driver dashboard
