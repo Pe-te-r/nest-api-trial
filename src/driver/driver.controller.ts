@@ -25,6 +25,7 @@ export class DriverController {
   }
 
   @Get(':id/orders')
+  @Public()
   findDriverOrders(@Param('id') id: string) {
     return this.driverService.findDriverOrders(id)
   }

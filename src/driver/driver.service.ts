@@ -165,7 +165,7 @@ async findDriverDashboard(id: string) {
   
     // Group assignments by batchGroupId
     const groupedByBatch = assignments.reduce((acc, assignment) => {
-      const batchId = assignment.orderItem.batchGroupId || 'ungrouped';
+      const batchId = assignment.orderItems[0].batchGroupId || 'ungrouped';
       if (!acc[batchId]) {
         acc[batchId] = [];
       }
@@ -176,16 +176,16 @@ async findDriverDashboard(id: string) {
     // Transform grouped data for frontend
     const groupedOrders = Object.entries(groupedByBatch).map(([batchId, batchAssignments]: [string, Assignment[]]) => {
       const firstAssignment = batchAssignments[0];
-      const order = firstAssignment.orderItem.order;
+      const order = firstAssignment.orderItems[0].order;
       const customer = order.customer;
       const orderItemIds = this.getOrderItemIds(assignments);
   
       // Get all products in this batch with vendor details
       const products = batchAssignments.map((assignment: Assignment) => {
-        const orderItem = assignment.orderItem;
-        const product = orderItem.product;
-        const vendor = orderItem.vendor;
-        const store = product.store;
+        const orderItem = assignment.orderItems;
+        const product = orderItem[0].product;
+        const vendor = orderItem[0].vendor;
+        const store = product[0].store;
 
         return {
           assignmentId: assignment.id,
@@ -194,8 +194,8 @@ async findDriverDashboard(id: string) {
           name: product.name,
           price: product.price,
           imageUrl: product.imageUrl,
-          quantity: orderItem.quantity,
-          itemStatus: orderItem.itemStatus,
+          quantity: orderItem[0].quantity,
+          itemStatus: orderItem[0].itemStatus,
           vendor: vendor ? {
             id: vendor.id,
             name: vendor.businessName,
@@ -308,7 +308,7 @@ async findDriverDashboard(id: string) {
           delivered: order.status === OrderStatus.COMPLETED ? order.updated_at : null
         },
         verification: {
-          pickupCode: isPickup ? firstAssignment.orderItem.randomCode : null,
+          pickupCode: isPickup ? firstAssignment.orderItems[0].randomCode : null,
           requiresVerification: isPickup
         }
       };

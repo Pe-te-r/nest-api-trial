@@ -11,6 +11,7 @@ import {
   Column,
   JoinColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm'
 
 @Entity('assignments')
@@ -21,9 +22,8 @@ export class Assignment {
   @ManyToOne(() => Driver, (driver) => driver.assignments)
   driver: Driver
 
-  @OneToOne(() => OrderItem, (orderItem) => orderItem.assignment)
-  @JoinColumn()
-  orderItem: OrderItem;
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.assignment)
+  orderItems: OrderItem[];
 
   @Column({ type: 'varchar' })
   batchGroupId: string; 

@@ -121,6 +121,6 @@ export class OrderItem {
   })
   itemStatus: OrderStatus
 
- @OneToOne(() => Assignment, (assignment) => assignment.orderItem)
-  assignment: Assignment;
+ @ManyToOne(() => Assignment, (assignment) => assignment.orderItems)
+  assignment: Assignment
 }

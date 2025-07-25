@@ -215,12 +215,12 @@ export class UserService {
       status: assignment.status,
       createdAt: assignment.created_at,
       orderItem: {
-        id: assignment.orderItem?.id,
-        product: assignment.orderItem?.product?.name,
-        quantity: assignment.orderItem?.quantity,
-        vendor: assignment.orderItem?.vendor?.businessName,
-        orderId: assignment.orderItem?.order?.id,
-        orderStatus: assignment.orderItem?.order?.status,
+        id: assignment.orderItems[0]?.id,
+        product: assignment.orderItems[0]?.product?.name,
+        quantity: assignment.orderItems[0]?.quantity,
+        vendor: assignment.orderItems[0]?.vendor?.businessName,
+        orderId: assignment.orderItems[0]?.order?.id,
+        orderStatus: assignment.orderItems[0]?.order?.status,
       }
     }));
 

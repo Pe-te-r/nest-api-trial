@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, IsNull, LessThan, Repository } from 'typeorm'
+import { In,  Repository } from 'typeorm'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { UpdateOrderDto, UpdateOrderItemDto } from './dto/update-order.dto'
 import { Order, OrderItem } from './entities/order.entity'
@@ -289,7 +289,7 @@ export class OrdersService {
   }
 
     async updateStatusItem(id: string, updateOrderDto: UpdateOrderItemDto) {
-      const item = await this.orderItemRepository.findOne({ where: { id } });
+      const item = await this.orderItemRepository.findOne({ where: { id }, relations: ['assignment'] });
       if (!item) throw new NotFoundException('Item not found');
     
       await this.orderItemRepository.update(id, { 
@@ -300,10 +300,18 @@ export class OrdersService {
       if (updateOrderDto.itemStatus === OrderStatus.READY_FOR_PICKUP && item.batchGroupId) {
         await this.checkBatchReadiness(item.batchGroupId);
       }
+      // mark the assigment is in transit for the driver
+      // if (updateOrderDto.itemStatus === OrderStatus.IN_TRANSIT && item.assignment) {
+      //   await this.assignmentRepository.update(item.assignment.id, {
+      //     status: AssignmentStatus.IN_PROGRESS
+      //   });
+      // }
   
     
       return formatResponse('success', 'Item status updated successfully', null);
   }
+
+
 
   async remove(id: string) {
     await this.orderRepository.delete(id)
@@ -312,8 +320,6 @@ export class OrdersService {
 
 private async checkBatchReadiness(batchGroupId: string) {
   // Get all items in this batch that are:
-  // 1. Not yet delivered (status < DELIVERED)
-  // 2. Not already assigned to a driver
   const batchItems = await this.orderItemRepository.find({
     where: {
       batchGroupId,
@@ -321,76 +327,62 @@ private async checkBatchReadiness(batchGroupId: string) {
     },
     relations: ['assignment'] // Include assignment relation for filtering
   });
-
-  // Filter to only items that should be ready for pickup now
-  const itemsToCheck = batchItems.filter(item => 
-    item.itemStatus === OrderStatus.READY_FOR_PICKUP ||
+// seperate pending and ready items
+   const pendingItems = batchItems.filter(item => 
     item.itemStatus === OrderStatus.PENDING
   );
+  const readyItems = batchItems.filter(item => 
+    item.itemStatus === OrderStatus.READY_FOR_PICKUP && 
+    !item.assignment
+  );
 
-  // Check if all relevant items are ready
-  const allReady = itemsToCheck.length > 0 && 
-    itemsToCheck.every(item => item.itemStatus === OrderStatus.READY_FOR_PICKUP);
-
-  console.log(`Batch ${batchGroupId} readiness check: 
-    Total items: ${batchItems.length}
-    Items to check: ${itemsToCheck.length}
-    All ready: ${allReady}`);
-
-  if (allReady) {
-    await this.assignDriverToBatch(batchGroupId);
+ // Check if all pending items are now ready and no items are left pending
+  if (pendingItems.length === 0 && readyItems.length > 0) {
+    console.log(`Batch ${batchGroupId} is ready for assignment`);
+    await this.assignDriverToBatch(batchGroupId, readyItems);
   }
+
 }
 
-private async assignDriverToBatch(batchGroupId: string) {
-  // 1. Find available driver
+private async assignDriverToBatch(batchGroupId: string, batchItems: OrderItem[]) {
+  // 1. Find available driver (with more sophisticated selection if needed)
   const drivers = await this.driverRepository.find({
-    where: {
-      status: DriverStatus.AVAILABLE,
-    },
-    relations: ['user']
-  });
-  
-  if (!drivers || drivers.length === 0) {
+    where: { status: DriverStatus.AVAILABLE }})
+  if (drivers.length === 0) {
+    throw new NotFoundException('No available drivers');
+  }
+  // randomly select one driver
+  const driver = drivers[Math.floor(Math.random() * drivers.length)];
+  console.log(`Assigning batch ${batchGroupId} to driver ${driver.id}`);
+
+  if (!driver) {
     throw new NotFoundException('No available drivers');
   }
 
-  // 2. Get all items in this batch needing assignment
-  const batchItems = await this.orderItemRepository.find({
-    where: { 
-      batchGroupId,
-      itemStatus: OrderStatus.READY_FOR_PICKUP,
-      // assignment: IsNull() // Only unassigned items
-    },
-    relations: ['order', 'vendor']
-  });
-
-  if (batchItems.length === 0) return;
-
-  // 3. Select driver (you might want more sophisticated selection)
-  const driver = drivers[Math.floor(Math.random() * drivers.length)];
-
-  // 4. Create assignments in transaction
+  // 2. Create transaction for atomic operations
   await this.dataSource.transaction(async manager => {
     // Update driver status
-    driver.status = DriverStatus.ASSIGNED;
-    await manager.save(driver);
+    await manager.getRepository(Driver).update(driver.id, {
+      status: DriverStatus.ASSIGNED
+    });
 
-    // Create assignment for each item
-    for (const item of batchItems) {
-      const assignment = manager.getRepository(Assignment).create({
-        driver,
-        orderItem: item,
-        batchGroupId,
-        status: AssignmentStatus.ACCEPTED
-      });
-      
-      await manager.getRepository(Assignment).save(assignment);
-      
-      // Update item status
-      // item.itemStatus = OrderStatus.READY_FOR_PICKUP;
-      // await manager.save(item);
-    }
+    // Create single assignment for the entire batch
+    const assignment = manager.getRepository(Assignment).create({
+      driver,
+      batchGroupId,
+      status: AssignmentStatus.PENDING,
+      orderItems: batchItems
+    });
+    
+    const savedAssignment = await manager.getRepository(Assignment).save(assignment);
+
+    // Update all batch items with the new assignment
+    await manager.getRepository(OrderItem).update(
+      { id: In(batchItems.map(item => item.id)) },
+      { 
+        assignment: savedAssignment,
+      }
+    );
   });
 }
 }
