@@ -59,7 +59,7 @@ export class DriverService {
 async findDriverDashboard(id: string) {
   const driver = await this.driverRepository.findOne({
     where: { user: { id } },
-    relations: ['user', 'assignments', 'assignments.orderItem'],
+    relations: ['user', 'assignments', 'assignments.orderItems'],
   });
 
   if (!driver) throw new NotFoundException(`Driver with id ${id} not found`);
@@ -212,8 +212,12 @@ async findDriverOrders(userId: string, status?: AssignmentStatus) {
         createdAt: order.created_at,
         updatedAt: order.updated_at,
         destination: order.destination,
-        items: order.items
+        items: order.items.map(item => ({
+          id: item.id,
+          itemStatus: item.itemStatus,
+          randomCode: item.randomCode
       }))
+    }))
     };
   });
 

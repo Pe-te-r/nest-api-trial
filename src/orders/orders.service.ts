@@ -289,6 +289,10 @@ export class OrdersService {
   }
 
     async updateStatusItem(id: string, updateOrderDto: UpdateOrderItemDto) {
+      // check if status is in data
+      if (!Object.values(OrderStatus).includes(updateOrderDto.itemStatus)) {
+        throw new BadRequestException('Invalid order item status');
+      }
       const item = await this.orderItemRepository.findOne({ where: { id }, relations: ['assignment'] });
       if (!item) throw new NotFoundException('Item not found');
     
