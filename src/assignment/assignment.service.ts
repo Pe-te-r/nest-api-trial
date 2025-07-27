@@ -27,7 +27,7 @@ export class AssignmentService {
 
   private updateRandomCode(orderItem: OrderItem[]){
     const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
-    console.log('randomCode', randomCode);
+    
     orderItem.forEach(item => {
       item.randomCode = randomCode;
     });
@@ -58,9 +58,8 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
 
     const assignment = await this.assignmentRepository.findOne({ 
       where: { id: assignmentId },
-      relations:{orderItems:true}
+      relations:{orderItems:true, driver:true}
     });
-
     if (!assignment) {
       throw new Error(`Assignment with ID ${assignmentId} not found`);
     }
@@ -74,11 +73,17 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
     const hasSameStatus = orderItems.every(
       item => item.itemStatus === updateDto.status
     );
+        console.log('status update was',updateDto.status)
+    console.log('has the same status', hasSameStatus)
+    
 
     if (hasSameStatus) {
+      
+      console.log('status: ', assignment.driver.status);
       // Update assignment status based on order status
       switch (updateDto.status) {
         case OrderStatus.PENDING:
+          console.log('')
           assignment.status = AssignmentStatus.ACCEPTED;
           break;
         case OrderStatus.REJECTED:
@@ -86,6 +91,7 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
           break;
         case OrderStatus.IN_TRANSIT:
           assignment.status = AssignmentStatus.IN_PROGRESS;
+          break;
         case OrderStatus.DELIVERED:
         case OrderStatus.COMPLETED:
           assignment.status = AssignmentStatus.COMPLETED;
@@ -98,6 +104,7 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
       const newCodeOrderItems = this.updateRandomCode(orderItems);
       await this.orderItemRepository.save(newCodeOrderItems);
       await this.assignmentRepository.save(assignment);
+      await this.assignmentRepository.manager.save(assignment.driver);
     }
   }
 }

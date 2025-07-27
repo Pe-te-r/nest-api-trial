@@ -224,92 +224,17 @@ async findDashboardStat(userId: string) {
     return formatResponse('success', 'Dashboard stats retrieved successfully', data);
   }
 
-  // async findOrders(userId: string) {
-  //   try {
-  //     const orders = await this.orderRepository.find({
-  //       where: {
-  //         customer: { id: userId },
-  //       },
-  //       relations: [
-  //         'customer',
-  //         'items',
-  //         'items.product',
-  //         'items.vendor',
-  //         'items.vendor.constituency',
-  //         'pickStation',
-  //         'pickStation.constituency',
-  //         'pickStation.constituency.county',
-  //         'constituency',
-  //       ],
-  //       order: {
-  //         created_at: 'DESC',
-  //       },
-  //     })
-  //     for (const order of orders) {
-  //     await this.synchronizeOrderStatus(order);
-  //   }
-
-
-  //     const formattedOrders = orders.map((order) => {
-  //       const pickStation = order.pickStation;
-      
-  //       const pickUpLocation = pickStation
-  //         ? {
-  //             id: pickStation.id,
-  //             name: pickStation.name,
-  //             contactPhone: pickStation.contactPhone,
-  //             openingTime: pickStation.openingTime,
-  //             closingTime: pickStation.closingTime,
-  //             isOpenNow: pickStation.isOpenNow(), // invokes the method
-  //             constituency: pickStation.constituency?.name ?? 'N/A',
-  //             country: pickStation.constituency?.county.county_name ?? 'N/A',
-  //           }
-  //         : null;
-      
-  //       return {
-  //         id: order.id,
-  //         status: order.status,
-  //         totalAmount: order.totalAmount,
-  //         deliveryOption: order.deliveryOption,
-  //         deliveryFee: order.deliveryFee,
-  //         deliveryInstructions: order.deliveryInstructions,
-  //         paymentMethod: order.paymentMethod,
-  //         paymentPhone: order.paymentPhone,
-  //         createdAt: order.created_at,
-  //         itemCount: order.itemCount,
-  //         pickUpLocation, // ✅ now included
-  //         constituency: order.constituency ?? null,
-  //         items: order.items.map((item) => ({
-  //           id: item.id,
-  //           quantity: item.quantity,
-  //           itemStatus: item.itemStatus,
-  //           product: {
-  //             id: item.product.id,
-  //             name: item.product.name,
-  //             price: item.product.price,
-  //           },
-  //           vendor: {
-  //             id: item.vendor.id,
-  //             businessName: item.vendor.businessName,
-  //             location: item.vendor.constituency?.name ?? 'N/A',
-  //           },
-  //           randomCode: item.randomCode,
-  //         })),
-  //       };
-  //     });
-      
-  //     return formatResponse('success', 'Orders fetched successfully', formattedOrders)
-  //   } catch (error) {
-  //     return formatResponse('error', 'An error occurred while fetching orders', null)
-  //   }
-  // }
-
   async findOrders(userId: string) {
     try{
       const orders = await this.orderRepository.find({
         where:{
           customer: { id: userId },
-        }})
+        },
+        relations:{items:true}
+      })
+        orders.forEach((order)=>{
+          this.synchronizeOrderStatus(order)
+        })
       const data = orders.map(order => ({
         id: order.id,
         status: order.status,
@@ -397,7 +322,7 @@ async findDashboardStat(userId: string) {
     }
   }
 
-  private async synchronizeOrderStatus(order: Order) {
+  async synchronizeOrderStatus(order: Order) {
   if (!order.items || order.items.length === 0) return;
 
   // Get all unique item statuses
@@ -414,10 +339,11 @@ async findDashboardStat(userId: string) {
     }
     return;
   }
+  const orderItems = this.determineOrderStatusFromItems(order.items)
 
   // Handle cases where items have different statuses
-  if (order.status !== this.determineOrderStatusFromItems(order.items)) {
-    order.status = this.determineOrderStatusFromItems(order.items);
+  if (order.status !== orderItems) {
+    order.status = orderItems
     await this.orderRepository.save(order);
   }
 }
@@ -440,7 +366,7 @@ private determineOrderStatusFromItems(items: OrderItem[]): OrderStatus {
     const itemPriority = statusHierarchy.indexOf(item.itemStatus);
     const currentPriority = statusHierarchy.indexOf(highestPriorityStatus);
     
-    if (itemPriority < currentPriority) {
+    if (itemPriority > currentPriority) {
       highestPriorityStatus = item.itemStatus;
     }
   }

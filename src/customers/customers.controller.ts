@@ -29,12 +29,6 @@ export class CustomersController {
     return this.customersService.findOrders(id)
   }
 
-  // @Get('orders/:id')
-  // @Public()
-  // findOrderById(@Param('id') id: string) {
-  //   return this.customersService.findOrdersById(id)
-  // }
-
   @Get('orders/:id/details')
   @Public()
   findOrderDetails(@Param('id') id: string) {
