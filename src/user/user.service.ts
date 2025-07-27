@@ -434,6 +434,26 @@ export class UserService {
         throw new NotFoundException('no superadmin details found')
       }
       return formatResponse('success', 'superadmins found', superadmins)
+    } else if (query.pickupstation === 'true') {
+      const pickupstations = await this.userRepository.find({
+        where: {
+          role: UserRole.PICKUPSTATION,
+        },
+        select: [
+          'email',
+          'first_name',
+          'last_name',
+          'account_status',
+          'created_at',
+          'id',
+          'is_verified',
+          'phone',
+        ],
+      })
+      if (!pickupstations) {
+        throw new NotFoundException('no pickup station details found')
+      }
+      return formatResponse('success', 'pickup stations found', pickupstations)
     }
   }
 

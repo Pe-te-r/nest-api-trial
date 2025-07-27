@@ -43,8 +43,7 @@ export class PickStation {
   constituency: Constituency
 
   @OneToOne(() => User, (user) => user.pickStation, {
-    nullable: true, // This makes the relationship optional
-    onDelete: 'SET NULL' // Optional: determines what happens when owner is deleted
+    onDelete: 'CASCADE'
   })
   @JoinColumn({name:'owner'})
   owner: User | null; 

@@ -48,6 +48,7 @@ export interface allUserQuery {
   vendor?: string
   superadmin?: string
   driver?: string
+  pickupstation?:string
 }
 
 export interface CloudinaryResponse {
