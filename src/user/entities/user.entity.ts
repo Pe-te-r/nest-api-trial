@@ -12,6 +12,7 @@ import {
   OneToMany,
 } from 'typeorm'
 import { Order } from 'src/orders/entities/order.entity'
+import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 
 @Entity('users')
 @Unique(['email'])
@@ -62,6 +63,11 @@ export class User {
 
   @OneToOne(() => Store, (store) => store.user)
   store: Store
+
+  @OneToOne(() => PickStation, (station) => station.owner, {
+    nullable: true // Also make this side nullable
+  })
+  pickStation: PickStation | null;
 
   @OneToMany(() => Order, (order) => order.customer)
   orders: Order[]

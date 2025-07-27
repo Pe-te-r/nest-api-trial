@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { User } from './entities/user.entity'
-import { In, Repository } from 'typeorm'
+import { In, IsNull, Repository } from 'typeorm'
 import { allUserQuery, AssignmentStatus, formatResponse, OrderStatus, userIdQueryType } from 'src/types/types'
 import { InjectRepository } from '@nestjs/typeorm'
 import { UserRole } from 'src/utils/enums'
@@ -12,6 +12,7 @@ import { Store } from 'src/stores/entities/store.entity'
 import { Order } from 'src/orders/entities/order.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { Driver } from 'src/driver/entities/driver.entity'
+import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 
 @Injectable()
 export class UserService {
@@ -22,10 +23,11 @@ export class UserService {
     @InjectRepository(Order) private orderRepository: Repository<Order>,
     @InjectRepository(Driver) private driverRepository: Repository<Driver>,
     @InjectRepository(Assignment) private assignmentRepository: Repository<Assignment>,
+    @InjectRepository(PickStation) private pickupstationRepository: Repository<PickStation>,
     private readonly authService: AuthService,
   ) {}
   create(createUserDto: CreateUserDto) {
-    console.log(createUserDto)
+    
     return 'This action adds a new user'
   }
 
@@ -37,7 +39,7 @@ export class UserService {
     }
 
     if(query.vendor=='true') {
-      console.log('query', query.vendor)
+      
      return this.getVendorDetailsForAdmin(id)
     }
 
@@ -444,7 +446,7 @@ export class UserService {
 
     if (!user) throw new NotFoundException('User not found')
 
-    console.log('user', user)
+    
 
     const store = user.store
     if (!store) throw new NotFoundException('This vendor has no store')
@@ -491,6 +493,7 @@ export class UserService {
     if (!user) throw new NotFoundException('user not found')
     return formatResponse('success', 'account_modal', user)
   }
+
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOne({ where: { id } })

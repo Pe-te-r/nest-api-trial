@@ -4,6 +4,7 @@ export enum UserRole {
   VENDOR = 'vendor',
   SUPERADMIN = 'superadmin',
   DRIVER = 'driver',
+  PICKUPSTATION='pickupstation'
 }
 
 export enum AccountStatus {

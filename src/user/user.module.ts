@@ -10,9 +10,10 @@ import { Store } from 'src/stores/entities/store.entity'
 import { Order } from 'src/orders/entities/order.entity'
 import { Driver } from 'src/driver/entities/driver.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
+import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 
 @Module({
-  imports: [DatabaseModule, TypeOrmModule.forFeature([User, Product, Store, Order, Driver, Assignment]), AuthModule],
+  imports: [DatabaseModule, TypeOrmModule.forFeature([User, Product, Store, Order, Driver, Assignment, PickStation]), AuthModule],
   controllers: [UserController],
   providers: [UserService],
 })

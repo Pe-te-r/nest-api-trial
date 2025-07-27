@@ -1,5 +1,6 @@
 import { Constituency } from 'src/constituency/entities/constituency.entity'
 import { Order } from 'src/orders/entities/order.entity'
+import { User } from 'src/user/entities/user.entity'
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,6 +9,8 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm'
 
 @Entity('pick_stations')
@@ -38,6 +41,13 @@ export class PickStation {
 
   @ManyToOne(() => Constituency, (constituency) => constituency.pickStations)
   constituency: Constituency
+
+  @OneToOne(() => User, (user) => user.pickStation, {
+    nullable: true, // This makes the relationship optional
+    onDelete: 'SET NULL' // Optional: determines what happens when owner is deleted
+  })
+  @JoinColumn({name:'owner'})
+  owner: User | null; 
 
   // Helper method to check if station is open (not stored in DB)
   isOpenNow(currentTime?: string): boolean {
