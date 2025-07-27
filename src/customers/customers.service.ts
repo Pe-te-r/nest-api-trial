@@ -224,12 +224,114 @@ async findDashboardStat(userId: string) {
     return formatResponse('success', 'Dashboard stats retrieved successfully', data);
   }
 
+  // async findOrders(userId: string) {
+  //   try {
+  //     const orders = await this.orderRepository.find({
+  //       where: {
+  //         customer: { id: userId },
+  //       },
+  //       relations: [
+  //         'customer',
+  //         'items',
+  //         'items.product',
+  //         'items.vendor',
+  //         'items.vendor.constituency',
+  //         'pickStation',
+  //         'pickStation.constituency',
+  //         'pickStation.constituency.county',
+  //         'constituency',
+  //       ],
+  //       order: {
+  //         created_at: 'DESC',
+  //       },
+  //     })
+  //     for (const order of orders) {
+  //     await this.synchronizeOrderStatus(order);
+  //   }
+
+
+  //     const formattedOrders = orders.map((order) => {
+  //       const pickStation = order.pickStation;
+      
+  //       const pickUpLocation = pickStation
+  //         ? {
+  //             id: pickStation.id,
+  //             name: pickStation.name,
+  //             contactPhone: pickStation.contactPhone,
+  //             openingTime: pickStation.openingTime,
+  //             closingTime: pickStation.closingTime,
+  //             isOpenNow: pickStation.isOpenNow(), // invokes the method
+  //             constituency: pickStation.constituency?.name ?? 'N/A',
+  //             country: pickStation.constituency?.county.county_name ?? 'N/A',
+  //           }
+  //         : null;
+      
+  //       return {
+  //         id: order.id,
+  //         status: order.status,
+  //         totalAmount: order.totalAmount,
+  //         deliveryOption: order.deliveryOption,
+  //         deliveryFee: order.deliveryFee,
+  //         deliveryInstructions: order.deliveryInstructions,
+  //         paymentMethod: order.paymentMethod,
+  //         paymentPhone: order.paymentPhone,
+  //         createdAt: order.created_at,
+  //         itemCount: order.itemCount,
+  //         pickUpLocation, // ✅ now included
+  //         constituency: order.constituency ?? null,
+  //         items: order.items.map((item) => ({
+  //           id: item.id,
+  //           quantity: item.quantity,
+  //           itemStatus: item.itemStatus,
+  //           product: {
+  //             id: item.product.id,
+  //             name: item.product.name,
+  //             price: item.product.price,
+  //           },
+  //           vendor: {
+  //             id: item.vendor.id,
+  //             businessName: item.vendor.businessName,
+  //             location: item.vendor.constituency?.name ?? 'N/A',
+  //           },
+  //           randomCode: item.randomCode,
+  //         })),
+  //       };
+  //     });
+      
+  //     return formatResponse('success', 'Orders fetched successfully', formattedOrders)
+  //   } catch (error) {
+  //     return formatResponse('error', 'An error occurred while fetching orders', null)
+  //   }
+  // }
+
   async findOrders(userId: string) {
-    try {
+    try{
       const orders = await this.orderRepository.find({
-        where: {
+        where:{
           customer: { id: userId },
-        },
+        }})
+      const data = orders.map(order => ({
+        id: order.id,
+        status: order.status,
+        totalAmount: order.totalAmount,
+        deliveryOption: order.deliveryOption,
+        deliveryFee: order.deliveryFee,
+        deliveryInstructions: order.deliveryInstructions,
+        paymentMethod: order.paymentMethod,
+        paymentPhone: order.paymentPhone,
+        createdAt: order.created_at,
+        itemCount: order.itemCount,
+        constituency: order.constituency ?? null,
+      }))
+      return formatResponse('success', 'Orders fetched successfully', data)
+    }catch (error) {
+      return formatResponse('error', 'An error occurred while fetching orders', null)
+    }
+  }
+  async findOrdersDetails(orderId: string) {
+    try {
+      const order = await this.orderRepository.findOne({
+        where: { id: orderId },
         relations: [
           'customer',
           'items',
@@ -241,66 +343,57 @@ async findDashboardStat(userId: string) {
           'pickStation.constituency.county',
           'constituency',
         ],
-        order: {
-          created_at: 'DESC',
-        },
       })
-      for (const order of orders) {
+      if (!order) {
+        return formatResponse('error', 'Order not found', null)
+      }
       await this.synchronizeOrderStatus(order);
-    }
-
-
-      const formattedOrders = orders.map((order) => {
-        const pickStation = order.pickStation;
-      
-        const pickUpLocation = pickStation
-          ? {
-              id: pickStation.id,
-              name: pickStation.name,
-              contactPhone: pickStation.contactPhone,
-              openingTime: pickStation.openingTime,
-              closingTime: pickStation.closingTime,
-              isOpenNow: pickStation.isOpenNow(), // invokes the method
-              constituency: pickStation.constituency?.name ?? 'N/A',
-              country: pickStation.constituency?.county.county_name ?? 'N/A',
-            }
-          : null;
-      
-        return {
-          id: order.id,
-          status: order.status,
-          totalAmount: order.totalAmount,
-          deliveryOption: order.deliveryOption,
-          deliveryFee: order.deliveryFee,
-          deliveryInstructions: order.deliveryInstructions,
-          paymentMethod: order.paymentMethod,
-          paymentPhone: order.paymentPhone,
-          createdAt: order.created_at,
-          itemCount: order.itemCount,
-          pickUpLocation, // ✅ now included
-          constituency: order.constituency ?? null,
-          items: order.items.map((item) => ({
-            id: item.id,
-            quantity: item.quantity,
-            itemStatus: item.itemStatus,
-            product: {
-              id: item.product.id,
-              name: item.product.name,
-              price: item.product.price,
-            },
-            vendor: {
-              id: item.vendor.id,
-              businessName: item.vendor.businessName,
-              location: item.vendor.constituency?.name ?? 'N/A',
-            },
-            randomCode: item.randomCode,
-          })),
-        };
-      });
-      
-      return formatResponse('success', 'Orders fetched successfully', formattedOrders)
+      const pickStation = order.pickStation
+      const pickUpLocation = pickStation
+        ? {
+            id: pickStation.id,
+            name: pickStation.name,
+            contactPhone: pickStation.contactPhone,
+            openingTime: pickStation.openingTime,
+            closingTime: pickStation.closingTime,
+            isOpenNow: pickStation.isOpenNow(), // invokes the method
+            constituency: pickStation.constituency?.name ?? 'N/A',
+            county: pickStation.constituency?.county.county_name ?? 'N/A',
+          }
+        : null
+      const formattedOrder = {
+        id: order.id,
+        status: order.status,
+        totalAmount: order.totalAmount,
+        deliveryOption: order.deliveryOption,
+        deliveryFee: order.deliveryFee,
+        deliveryInstructions: order.deliveryInstructions,
+        paymentMethod: order.paymentMethod,
+        paymentPhone: order.paymentPhone,
+        createdAt: order.created_at,
+        itemCount: order.itemCount,
+        pickUpLocation, // ✅ now included
+        constituency: order.constituency ?? null,
+        items: order.items.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+          itemStatus: item.itemStatus,
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            price: item.product.price,
+          },
+          vendor: {
+            id: item.vendor.id,
+            businessName: item.vendor.businessName,
+            location: item.vendor.constituency?.name ?? 'N/A',
+          },
+          randomCode: item.randomCode,
+        })),
+      }
+      return formatResponse('success', 'Order fetched successfully', formattedOrder)
     } catch (error) {
-      return formatResponse('error', 'An error occurred while fetching orders', null)
+      return formatResponse('error', 'An error occurred while fetching order', null)
     }
   }
 

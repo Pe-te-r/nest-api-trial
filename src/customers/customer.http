@@ -1,8 +1,14 @@
 @url=http://localhost:4001/customers
-@customerId=c6fe45c8-0938-47f3-8317-495b3bcbc97e
+@customerId=45ff90a1-c826-4904-9d92-7a03a4fa2aa4
 
 ### Get a customer orders by id
 GET {{url}}/{{customerId}}/dashboard
 ###
 
 GET {{url}}/admin/dashboard
+
+###
+GET {{url}}/{{customerId}}/orders
+
+###
+GET {{url}}/orders/9edb4835-eb8a-424e-9ef9-87384d2517ac/details

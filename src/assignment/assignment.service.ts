@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Assignment } from './entities/assignment.entity'
 import { Repository } from 'typeorm'
 import { Order, OrderItem } from 'src/orders/entities/order.entity'
-import { AssignmentStatus, OrderStatus } from 'src/types/types'
+import { AssignmentStatus, DriverStatus, OrderStatus } from 'src/types/types'
 
 @Injectable()
 export class AssignmentService {
@@ -57,7 +57,8 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
     await this.orderItemRepository.save(orderItem);
 
     const assignment = await this.assignmentRepository.findOne({ 
-      where: { id: assignmentId } 
+      where: { id: assignmentId },
+      relations:{orderItems:true}
     });
 
     if (!assignment) {
@@ -65,9 +66,10 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
     }
 
     // Check all order items in this assignment
-    const orderItems = await this.orderItemRepository.find({ 
-      where: { assignment: { id: assignmentId } } 
-    });
+    const orderItems = assignment.orderItems
+    // const orderItems = await this.orderItemRepository.find({ 
+    //   where: { assignment: { id: assignmentId } } 
+    // });
 
     const hasSameStatus = orderItems.every(
       item => item.itemStatus === updateDto.status
@@ -87,6 +89,8 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
         case OrderStatus.DELIVERED:
         case OrderStatus.COMPLETED:
           assignment.status = AssignmentStatus.COMPLETED;
+          // update the driver status to available
+          assignment.driver.status = DriverStatus.AVAILABLE;
           break;
       }
 
