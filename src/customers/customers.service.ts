@@ -245,6 +245,10 @@ async findDashboardStat(userId: string) {
           created_at: 'DESC',
         },
       })
+      for (const order of orders) {
+      await this.synchronizeOrderStatus(order);
+    }
+
 
       const formattedOrders = orders.map((order) => {
         const pickStation = order.pickStation;
@@ -300,6 +304,68 @@ async findDashboardStat(userId: string) {
     }
   }
 
+  private async synchronizeOrderStatus(order: Order) {
+  if (!order.items || order.items.length === 0) return;
+
+  // Get all unique item statuses
+  const itemStatuses = [...new Set(order.items.map(item => item.itemStatus))];
+
+  // Check if all items are in the same status
+  if (itemStatuses.length === 1) {
+    const unifiedStatus = itemStatuses[0];
+    
+    // Only update if the order status is different from the unified items status
+    if (order.status !== unifiedStatus) {
+      order.status = unifiedStatus;
+      await this.orderRepository.save(order);
+    }
+    return;
+  }
+
+  // Handle cases where items have different statuses
+  if (order.status !== this.determineOrderStatusFromItems(order.items)) {
+    order.status = this.determineOrderStatusFromItems(order.items);
+    await this.orderRepository.save(order);
+  }
+}
+
+private determineOrderStatusFromItems(items: OrderItem[]): OrderStatus {
+  const statusHierarchy = [
+    OrderStatus.REJECTED,
+    OrderStatus.CANCELLED,
+    OrderStatus.COMPLETED,
+    OrderStatus.DELIVERED,
+    OrderStatus.IN_TRANSIT,
+    OrderStatus.READY_FOR_PICKUP,
+    OrderStatus.PENDING
+  ];
+
+  // Find the highest priority status (lowest in the hierarchy array)
+  let highestPriorityStatus = OrderStatus.PENDING;
+  
+  for (const item of items) {
+    const itemPriority = statusHierarchy.indexOf(item.itemStatus);
+    const currentPriority = statusHierarchy.indexOf(highestPriorityStatus);
+    
+    if (itemPriority < currentPriority) {
+      highestPriorityStatus = item.itemStatus;
+    }
+  }
+
+  // Special case: If any item is rejected/cancelled but others are completed
+  if ([OrderStatus.REJECTED, OrderStatus.CANCELLED].includes(highestPriorityStatus)) {
+    const hasCompletedItems = items.some(item => 
+      item.itemStatus === OrderStatus.COMPLETED || 
+      item.itemStatus === OrderStatus.DELIVERED
+    );
+    
+    // if (hasCompletedItems) {
+    //   return OrderStatus.PARTIALLY_COMPLETED; // You might want to add this status
+    // }
+  }
+
+  return highestPriorityStatus;
+}
 
   create(createCustomerDto: CreateCustomerDto) {
     return 'This action adds a new customer'

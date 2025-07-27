@@ -82,6 +82,8 @@ private async processSingleAssignment(assignmentId: string, updateDto: UpdateAss
         case OrderStatus.REJECTED:
           assignment.status = AssignmentStatus.REJECTED;
           break;
+        case OrderStatus.IN_TRANSIT:
+          assignment.status = AssignmentStatus.IN_PROGRESS;
         case OrderStatus.DELIVERED:
         case OrderStatus.COMPLETED:
           assignment.status = AssignmentStatus.COMPLETED;
