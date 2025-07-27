@@ -174,7 +174,7 @@ async findDriverOrders(userId: string, status?: AssignmentStatus) {
   const processedAssignments = assignments.map(assignment => {
     // All order items in an assignment should have the same vendor
     const firstOrderItem = assignment.orderItems[0];
-    const vendor = firstOrderItem.vendor;
+    const vendor = firstOrderItem?.vendor;
     console.log('Processing assignment:', assignment.id, 'with vendor:', vendor.id);
     
     // Group order items by their order (since one assignment can have items from multiple orders)

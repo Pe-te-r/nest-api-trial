@@ -26,7 +26,7 @@ export class AssignmentService {
   }
 
   private updateRandomCode(orderItem: OrderItem[]){
-    const randomCode = Math.random().toString(36).substring(2, 15);
+    const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
     console.log('randomCode', randomCode);
     orderItem.forEach(item => {
       item.randomCode = randomCode;
