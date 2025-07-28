@@ -13,6 +13,7 @@ import { Order } from 'src/orders/entities/order.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { Driver } from 'src/driver/entities/driver.entity'
 import { PickStation } from 'src/pick_station/entities/pick_station.entity'
+import { MailService } from 'src/mail/mail.service'
 
 @Injectable()
 export class UserService {
@@ -25,6 +26,7 @@ export class UserService {
     @InjectRepository(Assignment) private assignmentRepository: Repository<Assignment>,
     @InjectRepository(PickStation) private pickupstationRepository: Repository<PickStation>,
     private readonly authService: AuthService,
+    private readonly mailService: MailService,
   ) {}
   create(createUserDto: CreateUserDto) {
     
@@ -725,7 +727,7 @@ async getDriverDetailsForAdmin(driverId: string) {
 
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({ where: { id } })
+    const user = await this.userRepository.findOne({ where: { id }, relations:{store:true}})
 
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`)
@@ -750,6 +752,9 @@ async getDriverDetailsForAdmin(driverId: string) {
     if(updateUserDto.role) {
       if (Object.values(UserRole).includes(updateUserDto.role)) {
         user.role = updateUserDto.role
+        if(updateUserDto?.role == UserRole.VENDOR){
+          await this.mailService.sendVendorApprovedEmail(user.email,user.first_name,user.store.businessName,'http://lcalhost:3001/login')
+        }
       } else {
         throw new NotFoundException(`Invalid role: ${updateUserDto.role}`)
       }

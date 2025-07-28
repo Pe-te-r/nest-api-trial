@@ -52,6 +52,25 @@ export class MailService {
     },
   });
 }
+async sendVendorApprovedEmail(
+  email: string,
+  ownerName: string,
+  businessName: string,
+  loginUrl: string
+) {
+  await this.mailerService.sendMail({
+    to: email,
+    subject: 'Congratulations! Your Vendor Application Has Been Approved',
+    template: 'vendor-approved', // matches your .hbs file
+    context: {
+      ownerName,
+      businessName,
+      loginUrl,
+      supportEmail: 'support@yourbusinessplatform.com',
+      currentYear: new Date().getFullYear()
+    },
+  });
+}
 
   async sendForgotPassword(email: string, firstName: string) {
     await this.mailerService.sendMail({
