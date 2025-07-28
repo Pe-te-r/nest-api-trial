@@ -31,6 +31,28 @@ export class MailService {
     })
   }
 
+  // vendor application
+  async sendVendorApplicationEmail(
+  email: string,
+  ownerName: string,
+  businessName: string,
+  constituencyName: string,
+  businessContact: string
+) {
+  await this.mailerService.sendMail({
+    to: email,
+    subject: 'Your Vendor Application Has Been Received',
+    template: 'vendor-application',
+    context: {
+      ownerName,
+      businessName,
+      constituencyName,
+      businessContact,
+      currentYear: new Date().getFullYear()
+    },
+  });
+}
+
   async sendForgotPassword(email: string, firstName: string) {
     await this.mailerService.sendMail({
       to: email,

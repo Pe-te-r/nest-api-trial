@@ -125,6 +125,7 @@ async findStoreDashboardStats(userId: string) {
     })
 
     await this.storeRepository.save(store)
+    await this.mailService.sendVendorApplicationEmail(user.email,`${user.first_name} ${user.last_name}`, createStoreDto.businessName,constituency.name,createStoreDto.businessContact)
     return formatResponse('success', 'Store created success wait for review', null)
   }
 
@@ -268,6 +269,7 @@ async findOne(id: string, isAdmin: boolean = true) {
       select: {
         id: true,
         quantity: true,
+        batchGroupId:true,
         itemStatus: true,
         randomCode: true,
         order: {
@@ -317,7 +319,6 @@ async findOne(id: string, isAdmin: boolean = true) {
         },
       },
     });
-    
     if (!orders.length) {
       throw new NotFoundException('No orders found for this vendor');
     }
@@ -354,6 +355,7 @@ async findOne(id: string, isAdmin: boolean = true) {
               name: item.order.constituency?.county?.county_name,
             }
           };
+          console.log('batchGroupId',item.batchGroupId)
     
       return {
         id: item.id,
@@ -363,6 +365,7 @@ async findOne(id: string, isAdmin: boolean = true) {
         product: item.product,
         order: {
           id: item.order.id,
+          batchId:item.batchGroupId,
           status: item.order.status,
           totalAmount: item.order.totalAmount,
           createdAt: item.order.created_at,
