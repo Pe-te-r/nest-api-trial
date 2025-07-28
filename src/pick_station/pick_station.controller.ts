@@ -28,6 +28,17 @@ export class PickStationController {
     return this.pickStationService.findByCounty(id)
   }
 
+  @Get(':id/dashboard')
+  @Public()
+  findDashboardStat(@Param('id') id:string){
+    return this.pickStationService.dashboardStat(id)
+  }
+  @Get(':id/orders')
+  @Public()
+  findOrderDetails(@Param('id') id:string){
+    return this.pickStationService.getOrderDetailsForPickupStation(id)
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePickStationDto: UpdatePickStationDto) {
     return this.pickStationService.update(id, updatePickStationDto)

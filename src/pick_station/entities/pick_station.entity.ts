@@ -46,7 +46,7 @@ export class PickStation {
     onDelete: 'CASCADE'
   })
   @JoinColumn({name:'owner'})
-  owner: User | null; 
+  owner: User; 
 
   // Helper method to check if station is open (not stored in DB)
   isOpenNow(currentTime?: string): boolean {

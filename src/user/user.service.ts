@@ -50,8 +50,130 @@ export class UserService {
     if(query.customers=='true') {
     return  this.findCustomerForAdmin(id)
     }
+    if(query.pickupstation=='true'){
+      return this.getPickupStation(id)
+    }
+
     throw new NotFoundException('No user details found for the given query')
   }
+
+ async getPickupStation(id: string) {
+  const pickStation = await this.pickupstationRepository.findOne({
+    where: { owner:{id} },
+    relations: [
+      'orders',
+      'orders.customer',
+      'orders.items',
+      'orders.items.product',
+      'orders.items.vendor',
+      'constituency',
+      'owner'
+    ],
+    select: {
+      id: true,
+      name: true,
+      contactPhone: true,
+      openingTime: true,
+      closingTime: true,
+      createdAt: true,
+      updatedAt: true,
+      constituency: {
+        id: true,
+        name: true
+      },
+      owner: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true
+      },
+      orders: {
+        id: true,
+        totalAmount: true,
+        status: true,
+        specialInstructions: true,
+        created_at: true,
+        updated_at: true,
+        deliveryOption: true,
+        deliveryFee: true,
+        deliveryInstructions: true,
+        paymentMethod: true,
+        paymentPhone: true,
+        customer: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true
+        },
+        items: {
+          id: true,
+          quantity: true,
+          itemStatus: true,
+          product: {
+            id: true,
+            name: true,
+            price: true
+          },
+          vendor: {
+            id: true,
+            businessName: true,
+            businessContact:true
+          }
+        }
+      }
+    },
+    order: {
+      orders: {
+        created_at: 'DESC'
+      }
+    }
+  });
+
+  if (!pickStation) {
+    throw new NotFoundException('Pickup station not found');
+  }
+
+  // Calculate additional statistics
+  const totalOrders = pickStation.orders?.length || 0;
+  const completedOrders = pickStation.orders?.filter(
+    order => order.status === OrderStatus.DELIVERED
+  ).length || 0;
+  const pendingOrders = pickStation.orders?.filter(
+    order => order.status === OrderStatus.PENDING
+  ).length || 0;
+  const inProgressOrders = pickStation.orders?.filter(
+    order => order.status === OrderStatus.IN_TRANSIT
+  ).length || 0;
+
+  // Calculate revenue statistics
+  const totalRevenue = pickStation.orders?.reduce(
+    (sum, order) => sum + order.totalAmount, 0
+  ) || 0;
+  const completedRevenue = pickStation.orders?.filter(
+    order => order.status === OrderStatus.DELIVERED
+  ).reduce((sum, order) => sum + order.totalAmount, 0) || 0;
+
+  // Add isOpen status
+  const isOpen = pickStation.isOpenNow();
+
+  return {
+    ...pickStation,
+    statistics: {
+      totalOrders,
+      completedOrders,
+      pendingOrders,
+      inProgressOrders,
+      totalRevenue,
+      completedRevenue,
+      completionRate: totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0
+    },
+    isOpen,
+    // Format opening hours for display
+    openingHours: `${pickStation.openingTime.substring(0, 5)} - ${pickStation.closingTime.substring(0, 5)}`
+  };
+}
 
   // find admin/superadmin details for admin
   async getAdminDetails(userId: string) {
@@ -179,15 +301,100 @@ export class UserService {
   return formatResponse('success', 'Vendor details retrieved successfully', response);
 }
   // find driver details for admin
-  async getDriverDetailsForAdmin(driverId: string) {
+//   async getDriverDetailsForAdmin(driverId: string) {
+//   const driver = await this.driverRepository.findOne({
+//     where: { user: { id: driverId } },
+//     relations: [
+//       'user',
+//       'assignments',
+//       'assignments.orderItem',
+//       'assignments.orderItem.order',
+//       'assignments.orderItem.vendor'
+//     ],
+//   });
+
+//   if (!driver) {
+//     throw new NotFoundException(`Driver with ID ${driverId} not found`);
+//   }
+
+//   // Calculate assignment statistics
+//   const assignmentStats = await this.assignmentRepository
+//     .createQueryBuilder('assignment')
+//     .select([
+//       'COUNT(assignment.id) as total_assignments',
+//       `SUM(CASE WHEN assignment.status = '${AssignmentStatus.IN_PROGRESS}' THEN 1 ELSE 0 END) as in_progress_assignments`,
+//       `SUM(CASE WHEN assignment.status = '${AssignmentStatus.COMPLETED}' THEN 1 ELSE 0 END) as completed_assignments`,
+//     ])
+//     .where('assignment.driverId = :driverId', { driverId })
+//     .getRawOne();
+
+//   // Get recent assignments (last 5)
+//   const recentAssignments = driver.assignments
+//     ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+//     .slice(0, 5)
+//     .map(assignment => ({
+//       id: assignment.id,
+//       status: assignment.status,
+//       createdAt: assignment.created_at,
+//       orderItem: {
+//         id: assignment.orderItems[0]?.id,
+//         product: assignment.orderItems[0]?.product?.name,
+//         quantity: assignment.orderItems[0]?.quantity,
+//         vendor: assignment.orderItems[0]?.vendor?.businessName,
+//         orderId: assignment.orderItems[0]?.order?.id,
+//         orderStatus: assignment.orderItems[0]?.order?.status,
+//       }
+//     }));
+
+//   // Format the response
+//   const response = {
+//     id: driver.id,
+//     personalDetails: {
+//       userId: driver.user.id,
+//       firstName: driver.user.first_name,
+//       lastName: driver.user.last_name,
+//       email: driver.user.email,
+//       phone: driver.user.phone,
+//       accountStatus: driver.user.account_status,
+//       isVerified: driver.user.is_verified,
+//       lastLogin: driver.user.session?.last_login,
+//     },
+//     vehicleDetails: {
+//       type: driver.vehicle_type,
+//       licensePlate: driver.license_plate,
+//       status: driver.status,
+//     },
+//     activityStats: {
+//       totalAssignments: parseInt(assignmentStats.total_assignments) || 0,
+//       pendingAssignments: parseInt(assignmentStats.pending_assignments) || 0,
+//       inProgressAssignments: parseInt(assignmentStats.in_progress_assignments) || 0,
+//       completedAssignments: parseInt(assignmentStats.completed_assignments) || 0,
+//       cancelledAssignments: parseInt(assignmentStats.cancelled_assignments) || 0,
+//       completionRate: assignmentStats.total_assignments > 0 
+//         ? ((parseInt(assignmentStats.completed_assignments) / parseInt(assignmentStats.total_assignments) * 100).toFixed(2) + '%')
+//         : '0%',
+//     },
+//     recentActivity: recentAssignments || [],
+//     metadata: {
+//       createdAt: driver.created_at,
+//       lastUpdated: driver.updated_at,
+//     }
+//   };
+
+//   return formatResponse('success', 'Driver details retrieved successfully', response);
+// }
+
+async getDriverDetailsForAdmin(driverId: string) {
   const driver = await this.driverRepository.findOne({
     where: { user: { id: driverId } },
     relations: [
       'user',
+      'user.session', // Make sure to include session if you're using last_login
       'assignments',
-      'assignments.orderItem',
-      'assignments.orderItem.order',
-      'assignments.orderItem.vendor'
+      'assignments.orderItems',
+      'assignments.orderItems.product',
+      'assignments.orderItems.vendor',
+      'assignments.orderItems.order'
     ],
   });
 
@@ -203,26 +410,29 @@ export class UserService {
       `SUM(CASE WHEN assignment.status = '${AssignmentStatus.IN_PROGRESS}' THEN 1 ELSE 0 END) as in_progress_assignments`,
       `SUM(CASE WHEN assignment.status = '${AssignmentStatus.COMPLETED}' THEN 1 ELSE 0 END) as completed_assignments`,
     ])
-    .where('assignment.driverId = :driverId', { driverId })
+    .where('assignment.driverId = :driverId', { driverId: driver.id }) // Use driver.id instead of driverId
     .getRawOne();
 
   // Get recent assignments (last 5)
   const recentAssignments = driver.assignments
     ?.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5)
-    .map(assignment => ({
-      id: assignment.id,
-      status: assignment.status,
-      createdAt: assignment.created_at,
-      orderItem: {
-        id: assignment.orderItems[0]?.id,
-        product: assignment.orderItems[0]?.product?.name,
-        quantity: assignment.orderItems[0]?.quantity,
-        vendor: assignment.orderItems[0]?.vendor?.businessName,
-        orderId: assignment.orderItems[0]?.order?.id,
-        orderStatus: assignment.orderItems[0]?.order?.status,
-      }
-    }));
+    .map(assignment => {
+      const firstOrderItem = assignment.orderItems?.[0];
+      return {
+        id: assignment.id,
+        status: assignment.status,
+        createdAt: assignment.created_at,
+        orderItem: firstOrderItem ? {
+          id: firstOrderItem.id,
+          product: firstOrderItem.product?.name,
+          quantity: firstOrderItem.quantity,
+          vendor: firstOrderItem.vendor?.businessName,
+          orderId: firstOrderItem.order?.id,
+          orderStatus: firstOrderItem.order?.status,
+        } : null
+      };
+    });
 
   // Format the response
   const response = {
@@ -243,12 +453,12 @@ export class UserService {
       status: driver.status,
     },
     activityStats: {
-      totalAssignments: parseInt(assignmentStats.total_assignments) || 0,
-      pendingAssignments: parseInt(assignmentStats.pending_assignments) || 0,
-      inProgressAssignments: parseInt(assignmentStats.in_progress_assignments) || 0,
-      completedAssignments: parseInt(assignmentStats.completed_assignments) || 0,
-      cancelledAssignments: parseInt(assignmentStats.cancelled_assignments) || 0,
-      completionRate: assignmentStats.total_assignments > 0 
+      totalAssignments: parseInt(assignmentStats?.total_assignments) || 0,
+      pendingAssignments: parseInt(assignmentStats?.pending_assignments) || 0,
+      inProgressAssignments: parseInt(assignmentStats?.in_progress_assignments) || 0,
+      completedAssignments: parseInt(assignmentStats?.completed_assignments) || 0,
+      cancelledAssignments: parseInt(assignmentStats?.cancelled_assignments) || 0,
+      completionRate: assignmentStats?.total_assignments > 0 
         ? ((parseInt(assignmentStats.completed_assignments) / parseInt(assignmentStats.total_assignments) * 100).toFixed(2) + '%')
         : '0%',
     },
@@ -261,7 +471,6 @@ export class UserService {
 
   return formatResponse('success', 'Driver details retrieved successfully', response);
 }
-
 
     // Find customer details for admin
   async findCustomerForAdmin(id: string) {

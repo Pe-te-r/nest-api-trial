@@ -1,0 +1,5 @@
+@url = http://localhost:4001/pickup-stations
+@id = 45ff90a1-c826-4904-9d92-7a03a4fa2aa4
+
+###
+GET {{url}}/{{id}}/dashboard
