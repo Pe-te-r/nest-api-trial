@@ -71,6 +71,34 @@ async sendVendorApprovedEmail(
     },
   });
 }
+async sendOrderConfirmationEmail(
+  email: string,
+  firstName: string,
+  orderId: string,
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: string;
+    imageUrl: string;
+    storeName: string;
+  }>,
+  subtotal: string,
+  totalAmount: string,
+) {
+  await this.mailerService.sendMail({
+    to: email,
+    subject: `Order Confirmation - #${orderId}`,
+    template: 'order-confirmation',
+    context: {
+      firstName,
+      orderId,
+      items,
+      subtotal,
+      totalAmount,
+      currentYear: new Date().getFullYear()
+    },
+  });
+}
 
   async sendForgotPassword(email: string, firstName: string) {
     await this.mailerService.sendMail({

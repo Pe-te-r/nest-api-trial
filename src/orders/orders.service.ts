@@ -14,6 +14,7 @@ import { PickStation } from 'src/pick_station/entities/pick_station.entity'
 import { Assignment } from 'src/assignment/entities/assignment.entity'
 import { Driver } from 'src/driver/entities/driver.entity'
 import { DataSource } from 'typeorm'
+import { MailService } from 'src/mail/mail.service'
 
 @Injectable()
 export class OrdersService {
@@ -39,6 +40,7 @@ export class OrdersService {
     @InjectRepository(Driver)
     private readonly driverRepository: Repository<Driver>,
     private readonly dataSource: DataSource,
+    private mailService: MailService
   ) {}
 
   async addCodeToOrder(batchGroupId: string) {
@@ -108,6 +110,24 @@ export class OrdersService {
       pickStation
     })
     await this.orderRepository.save(order);
+// After creating the order in your controller
+const orderItemsForEmail = order.items.map(item => ({
+  name: item.product.name,
+  quantity: item.quantity,
+  price: formatCurrency(item.product.price), // implement your currency formatting
+  imageUrl: item.product.imageUrl || 'https://via.placeholder.com/80',
+  storeName: item.vendor.businessName
+}));
+
+await this.mailService.sendOrderConfirmationEmail(
+  customer.email,
+  customer.first_name,
+  order.id,
+  orderItemsForEmail,
+  formatCurrency(order.totalAmount - (order.deliveryFee || 0)),
+  formatCurrency(order.totalAmount),
+
+);
 
     // Get all unique batchGroupIds from the items
     const uniqueBatchGroupIds = [...new Set(items.map(item => item.batchGroupId))];
@@ -116,6 +136,7 @@ export class OrdersService {
     for (const batchGroupId of uniqueBatchGroupIds) {
       await this.addCodeToOrder(batchGroupId);
     }
+
     return formatResponse('success', 'Order created successfully', null)
   }
 
@@ -385,3 +406,7 @@ private async assignDriverToBatch(batchGroupId: string, batchItems: OrderItem[])
   });
 }
 }
+function formatCurrency(amount: number): string {
+  return 'KSh ' + amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+

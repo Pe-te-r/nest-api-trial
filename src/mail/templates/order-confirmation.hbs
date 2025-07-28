@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation - #{{orderId}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+        }
+        .logo {
+            color: #2e7d32;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            border-top: 2px solid #f0f0f0;
+            padding-top: 20px;
+        }
+        .highlight {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .order-summary {
+            margin: 20px 0;
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .order-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+        .item-details {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .item-meta {
+            font-size: 14px;
+            color: #666;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #fff3cd;
+            color: #856404;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .totals {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .grand-total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Your Business Platform</div>
+        <h2>Order Confirmation</h2>
+    </div>
+    
+    <div class="content">
+        <p>Hello {{firstName}},</p>
+        
+        <p>Thank you for your order! We've received it and it's currently being processed. Here are the details:</p>
+        
+        <div class="order-summary">
+            <h3>Order #{{orderId}}</h3>
+            <p>Status: <span class="status-badge">Pending Processing</span></p>
+            
+            <h4>Your Items:</h4>
+            {{#each items}}
+            <div class="order-item">
+                <img src="{{this.imageUrl}}" alt="{{this.name}}" class="item-image">
+                <div class="item-details">
+                    <div class="item-name">{{this.name}}</div>
+                    <div class="item-meta">
+                        Quantity: {{this.quantity}}<br>
+                        Price: {{this.price}} each<br>
+                        Store: {{this.storeName}}
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+            
+            <div class="totals">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>{{subtotal}}</span>
+                </div>
+                {{#if deliveryFee}}
+                <div class="total-row">
+                    <span>Delivery Fee:</span>
+                    <span>{{deliveryFee}}</span>
+                </div>
+                {{/if}}
+                <div class="total-row grand-total">
+                    <span>Total Amount:</span>
+                    <span>{{totalAmount}}</span>
+                </div>
+            </div>
+        </div>
+        
+        {{!-- <h4>Delivery Information:</h4>
+        <p>
+            Method: {{deliveryMethod}}<br>
+            {{#if deliveryAddress}}
+            Address: {{deliveryAddress}}<br>
+            {{/if}}
+            {{#if pickupLocation}}
+            Pickup Location: {{pickupLocation}}<br>
+            {{/if}}
+            {{#if specialInstructions}}
+            Special Instructions: {{specialInstructions}}<br>
+            {{/if}}
+        </p>
+        
+        <h4>Payment Information:</h4>
+        <p>
+            Method: {{paymentMethod}}<br>
+            {{#if paymentPhone}}
+            Phone: {{paymentPhone}}<br>
+            {{/if}}
+        </p> --}}
+        
+        <p>We'll notify you once your order is being processed. If you have any questions, please contact our support team.</p>
+        
+        <p>Thank you for shopping with us!</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {{currentYear}} Your Business Platform. All rights reserved.</p>
+    </div>
+</body>
+</html>
