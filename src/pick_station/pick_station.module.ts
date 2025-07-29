@@ -4,10 +4,10 @@ import { PickStationService } from './pick_station.service'
 import { PickStationController } from './pick_station.controller'
 import { PickStation } from './entities/pick_station.entity'
 import { Constituency } from '../constituency/entities/constituency.entity'
-import { Order } from 'src/orders/entities/order.entity'
+import { Order, OrderItem } from 'src/orders/entities/order.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PickStation, Constituency, Order])],
+  imports: [TypeOrmModule.forFeature([PickStation, Constituency, Order, OrderItem])],
   controllers: [PickStationController],
   providers: [PickStationService],
 })

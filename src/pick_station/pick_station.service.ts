@@ -2,11 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { CreatePickStationDto } from './dto/create-pick_station.dto'
-import { UpdatePickStationDto } from './dto/update-pick_station.dto'
+import { UpdateOrderItemDto, UpdateOrderItemsStatusDto, UpdatePickStationDto } from './dto/update-pick_station.dto'
 import { PickStation } from './entities/pick_station.entity'
 import { Constituency } from '../constituency/entities/constituency.entity'
 import { formatResponse, OrderStatus } from 'src/types/types'
-import { Order } from 'src/orders/entities/order.entity'
+import { Order, OrderItem } from 'src/orders/entities/order.entity'
+interface ItemT {
+  itemId: string;
+  status: OrderStatus;
+}
+
 
 @Injectable()
 export class PickStationService {
@@ -17,8 +22,39 @@ export class PickStationService {
     private readonly constituencyRepository: Repository<Constituency>,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepository: Repository<OrderItem>
 
   ) {}
+
+ async updateItemsStatus(orderId: string, items: UpdateOrderItemDto[]) {
+  console.log('items show',items)
+    // First, verify the order exists and get all its items
+    const orderItems = await this.orderItemRepository.find({ where: { order: { id: orderId } } });
+    
+    if (!orderItems || orderItems.length === 0) {
+      throw new Error(`No items found for order ${orderId}`);
+    }
+  
+
+    // Create a map of items to update for faster lookup
+    const itemsToUpdateMap = new Map<string, OrderStatus>();
+    items.forEach(item => itemsToUpdateMap.set(item.itemId, item.status));
+
+    // Prepare the updates
+    const updates = orderItems
+      .filter(item => itemsToUpdateMap.has(item.id))
+      .map(item => ({
+        id: item.id,
+        itemStatus: itemsToUpdateMap.get(item.id),
+      }));
+
+    // Batch update the items
+    if (updates.length > 0) {
+      await this.orderItemRepository.save(updates);
+    }
+    return formatResponse('success','items update success',null)
+  }
 
   async create(createPickStationDto: CreatePickStationDto) {
     const constituency = await this.constituencyRepository.findOne({

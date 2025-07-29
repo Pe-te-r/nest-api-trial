@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common'
 import { PickStationService } from './pick_station.service'
 import { CreatePickStationDto } from './dto/create-pick_station.dto'
-import { UpdatePickStationDto } from './dto/update-pick_station.dto'
+import { UpdateOrderItemDto, UpdateOrderItemsStatusDto, UpdatePickStationDto } from './dto/update-pick_station.dto'
 import { Public } from 'src/common/decorators/public.decorator'
 
 @Controller('pickup-stations')
@@ -16,6 +16,12 @@ export class PickStationController {
   @Get()
   findAll() {
     return this.pickStationService.findAll()
+  }
+
+  @Patch('items/:id/status')
+  updateItemStatus(@Param('id') orderId:string,@Body() updateOrderItems:UpdateOrderItemDto[]){
+    console.log('updateOrderItems',updateOrderItems)
+    return this.pickStationService.updateItemsStatus(orderId,updateOrderItems)
   }
 
   @Get(':id')
