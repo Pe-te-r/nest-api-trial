@@ -20,7 +20,7 @@ export class PickStationController {
 
   @Patch('items/:id/status')
   updateItemStatus(@Param('id') orderId:string,@Body() updateOrderItems:UpdateOrderItemDto[]){
-    console.log('updateOrderItems',updateOrderItems)
+    
     return this.pickStationService.updateItemsStatus(orderId,updateOrderItems)
   }
 

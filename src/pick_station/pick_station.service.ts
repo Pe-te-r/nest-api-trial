@@ -28,7 +28,7 @@ export class PickStationService {
   ) {}
 
  async updateItemsStatus(orderId: string, items: UpdateOrderItemDto[]) {
-  console.log('items show',items)
+  
     // First, verify the order exists and get all its items
     const orderItems = await this.orderItemRepository.find({ where: { order: { id: orderId } } });
     

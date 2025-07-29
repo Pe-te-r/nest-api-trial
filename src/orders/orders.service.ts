@@ -358,7 +358,7 @@ private async checkBatchReadiness(batchGroupId: string) {
 
  // Check if all pending items are now ready and no items are left pending
   if (pendingItems.length === 0 && readyItems.length > 0) {
-    console.log(`Batch ${batchGroupId} is ready for assignment`);
+    
     await this.assignDriverToBatch(batchGroupId, readyItems);
   }
 
@@ -373,7 +373,7 @@ private async assignDriverToBatch(batchGroupId: string, batchItems: OrderItem[])
   }
   // randomly select one driver
   const driver = drivers[Math.floor(Math.random() * drivers.length)];
-  console.log(`Assigning batch ${batchGroupId} to driver ${driver.id}`);
+  
 
   if (!driver) {
     throw new NotFoundException('No available drivers');

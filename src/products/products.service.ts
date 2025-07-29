@@ -66,7 +66,7 @@ export class ProductsService {
         stream: mockStream,
       }
       const uploadResult = await this.cloudinaryService.uploadImage(file)
-      console.log(uploadResult)
+      
       imageUrl = uploadResult.secure_url
       publicId = uploadResult.public_id
     } else {
@@ -123,7 +123,7 @@ export class ProductsService {
  async update(id: string, updateProductDto: UpdateProductDto) {
     //do the update logic here
     const product_found = await this.productRepository.findOne({ where: { id } })
-    console.log('product found', product_found)
+    
     if (!product_found) {
       // throw new NotFoundException(`Product with ID ${id} not found`)
       return formatResponse('error', `Product with ID ${id} not found`, null)
