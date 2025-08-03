@@ -104,7 +104,7 @@ A robust RESTful API for managing an online grocery store, providing endpoints f
   app.useGlobalFilters(new GlobalExceptionFilter())
   app.use(json({ limit: '10mb' }))
   app.use(urlencoded({ extended: true, limit: '10mb' }))
-  await app.listen(4001)
+  await app.listen(process.env.PORT || 4001)
   console.log('app running on port:', 4001)
 }
 bootstrap()
