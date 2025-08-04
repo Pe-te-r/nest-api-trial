@@ -137,6 +137,7 @@ export class AuthService {
           role: foundUser.role,
         },
       }
+      console.log('login data', loginData)
       return formatResponse<LoginDataT>('success', 'Login was success', loginData)
     } else {
       throw new BadRequestException('Email is required')
