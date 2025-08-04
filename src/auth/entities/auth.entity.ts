@@ -11,8 +11,8 @@ import {
 
 @Entity('auth_sessions')
 export class AuthSession {
-  @PrimaryColumn('uuid')
-  userId: string
+  @PrimaryColumn('id')
+  id: string
 
   @Column({ type: 'varchar', nullable: false })
   refresh_token: string
