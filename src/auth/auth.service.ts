@@ -115,6 +115,7 @@ export class AuthService {
       if (!foundUser) {
         throw new NotFoundException(`Email: ${updateAuthDto.email} does not exits `)
       }
+      console.log('found user',foundUser)
       // password valid check
       if (!(await this.verifyData(updateAuthDto?.password, foundUser.password_hash))) {
         throw new UnauthorizedException('Invalid credentials')
